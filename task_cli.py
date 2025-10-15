@@ -60,8 +60,7 @@ ops = Operations(filename)
 
 match args.operation:
     case "add" | "a":
-        with open(filename, 'a+', encoding="utf-8") as f:
-            result = ops.add(args.task_arg1)
-            print(f"task added in the json file successfully; return value = {result}")
+        result = ops.add(args.task_arg1)
+        print(f"task added in the json file successfully; return value = {result}")
     case "update" | "u":
         pass
