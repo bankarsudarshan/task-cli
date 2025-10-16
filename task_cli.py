@@ -106,7 +106,7 @@ class Operations:
         except FileNotFoundError:
             print(f"`{self.filename}` file not found. Perhaps you need to add some tasks first")
             sys.exit(1) # terminate the program here
-
+        
         if id in tasks:
             del tasks[id]
         else:
@@ -122,7 +122,7 @@ parser = argparse.ArgumentParser() # the ArgumentParser object
 
 parser.add_argument("--add", "-a", type=str)
 parser.add_argument("--update", "-u", dest="update", nargs=2)
-parser.add_argument("--delete", "-d", type=int)
+parser.add_argument("--delete", "-d")
 args = parser.parse_args() # the Namespace object, returned by parse_args()
 
 filename = "tasks.json"
@@ -136,4 +136,4 @@ if args.update:
     print(f"task with {id} updated successfully")
 if args.delete:
     id = ops.delete(args.delete)
-    print(f"Delete task (ID:{id})")
+    print(f"Deleted task (ID:{id})")
