@@ -83,6 +83,28 @@ def list_tasks(args):
     
     print(json.dumps(new_tasks, indent='\t')) # json.dumps() outputs a nice formated string
 
+def mark_done(args):
+    tasks = load_file(filename)
+    id = args.id
+    if len(tasks) == 0 or id not in tasks:
+        print(f"No task with (ID:{id})")
+        return
+    else:
+        tasks[id]['status'] = "done"
+    save_file(tasks, filename)
+    return id
+
+def mark_in_progress(args):
+    tasks = load_file(filename)
+    id = args.id
+    if len(tasks) == 0 or id not in tasks:
+        print(f"No task with (ID:{id})")
+        return
+    else:
+        tasks[id]['status'] = "in-progress"
+    save_file(tasks, filename)
+    return id
+
 parser = ArgumentParser()
 subparsers = parser.add_subparsers()
 
@@ -102,6 +124,14 @@ parser_delete.set_defaults(func=delete)
 parser_list = subparsers.add_parser('list')
 parser_list.add_argument('tasks_type', type=str, choices=['in-progress', 'todo', 'done', 'all'], default="all", nargs='?')
 parser_list.set_defaults(func=list_tasks)
+
+parser_mark_done = subparsers.add_parser('mark-done')
+parser_mark_done.add_argument('id')
+parser_mark_done.set_defaults(func=mark_done)
+
+parser_mark_in_progress = subparsers.add_parser('mark-in-progress')
+parser_mark_in_progress.add_argument('id')
+parser_mark_in_progress.set_defaults(func=mark_in_progress)
 
 args = parser.parse_args()
 args.func(args)
