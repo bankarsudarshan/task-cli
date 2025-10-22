@@ -67,6 +67,22 @@ def delete(args):
     save_file(tasks, filename)
     return id
 
+def list_tasks(args):
+    tasks = load_file(filename)
+    if len(tasks) == 0:
+        print(f"No tasks added")
+        return
+    tasks_type = args.tasks_type
+    new_tasks = {}
+    if tasks_type != "all":
+        for id, task in tasks.items():
+            if task["status"] == tasks_type:
+                new_tasks[id] = task
+    else:
+        new_tasks = tasks
+    
+    print(json.dumps(new_tasks, indent='\t')) # json.dumps() outputs a nice formated string
+
 parser = ArgumentParser()
 subparsers = parser.add_subparsers()
 
@@ -82,6 +98,10 @@ parser_update.set_defaults(func=update)
 parser_delete = subparsers.add_parser("delete")
 parser_delete.add_argument('id')
 parser_delete.set_defaults(func=delete)
+
+parser_list = subparsers.add_parser('list')
+parser_list.add_argument('tasks_type', type=str, choices=['in-progress', 'todo', 'done', 'all'], default="all", nargs='?')
+parser_list.set_defaults(func=list_tasks)
 
 args = parser.parse_args()
 args.func(args)
