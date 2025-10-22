@@ -27,7 +27,7 @@ def save_file(tasks, filename):
 def add(args):
     new_task = {
         "description": args.task,
-        "status": "to-do",
+        "status": "todo",
         "createdAt": str(datetime.now()),
         "updatedAt": str(datetime.now())
     }
@@ -105,6 +105,23 @@ def mark_in_progress(args):
     save_file(tasks, filename)
     return id
 
+def clear_tasks(args):
+    tasks = load_file(filename)
+    if len(tasks) == 0:
+        print(f"There are no tasks added")
+        return
+    tasks_type = args.tasks_type
+    new_tasks = {}
+    if tasks_type != "all":
+        for id, task in tasks.items():
+            if task["status"] != tasks_type:
+                new_tasks[id] = task
+    else:
+        new_tasks = {}
+    
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(new_tasks, f, indent='\t') # json.dumps() outputs a nice formated string
+
 parser = ArgumentParser()
 subparsers = parser.add_subparsers()
 
@@ -132,6 +149,10 @@ parser_mark_done.set_defaults(func=mark_done)
 parser_mark_in_progress = subparsers.add_parser('mark-in-progress')
 parser_mark_in_progress.add_argument('id')
 parser_mark_in_progress.set_defaults(func=mark_in_progress)
+
+parser_clear = subparsers.add_parser('clear')
+parser_clear.add_argument('tasks_type', type=str, choices=['in-progress', 'todo', 'done', 'all'], default="all", nargs='?')
+parser_clear.set_defaults(func=clear_tasks)
 
 args = parser.parse_args()
 args.func(args)
