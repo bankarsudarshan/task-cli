@@ -43,8 +43,18 @@ def add(args):
     return id
 
 def update(args):
-    print("hi in update()")
-    print(f"update subparser arguments = {args}")
+    tasks = load_file(filename)
+    if len(tasks) == 0:
+        print(f"No task with (ID:{args.id})")
+        return
+    id = str(args.id)
+    if id not in tasks:
+        print(f"No task with (ID:{args.id})")
+        return
+    else:
+        tasks[id]["description"] = args.new_desc
+    save_file(tasks, filename)
+    return id
 
 parser = ArgumentParser()
 subparsers = parser.add_subparsers()
