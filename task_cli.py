@@ -56,6 +56,17 @@ def update(args):
     save_file(tasks, filename)
     return id
 
+def delete(args):
+    tasks = load_file(filename)
+    id = args.id
+    if id not in tasks:
+        print(f"No task with (ID:{id})")
+        return
+    else:
+        del tasks[id]
+    save_file(tasks, filename)
+    return id
+
 parser = ArgumentParser()
 subparsers = parser.add_subparsers()
 
@@ -67,6 +78,10 @@ parser_update = subparsers.add_parser('update')
 parser_update.add_argument('id', type=int)
 parser_update.add_argument('new_desc', type=str)
 parser_update.set_defaults(func=update)
+
+parser_delete = subparsers.add_parser("delete")
+parser_delete.add_argument('id')
+parser_delete.set_defaults(func=delete)
 
 args = parser.parse_args()
 args.func(args)
