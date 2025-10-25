@@ -1,13 +1,10 @@
-from argparse import ArgumentParser
 import json
 from datetime import datetime
 import os
 
-filename = 'tasks.json'
-
 def load_file(filename):
     if not os.path.isfile(filename):
-        with open(filename, 'w', encoding='utf-8'):
+        with open(filename, 'w', encoding='utf-8') as f:
             pass
         return {}
     
@@ -24,7 +21,7 @@ def save_file(tasks, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(tasks, f, indent="\t")
 
-def add(args):
+def add(args, filename):
     new_task = {
         "description": args.task,
         "status": "todo",
@@ -42,7 +39,7 @@ def add(args):
     save_file(tasks, filename)
     return id
 
-def update(args):
+def update(args, filename):
     tasks = load_file(filename)
     if len(tasks) == 0:
         print(f"No task with (ID:{args.id})")
@@ -56,7 +53,7 @@ def update(args):
     save_file(tasks, filename)
     return id
 
-def delete(args):
+def delete(args, filename):
     tasks = load_file(filename)
     id = args.id
     if id not in tasks:
@@ -67,7 +64,7 @@ def delete(args):
     save_file(tasks, filename)
     return id
 
-def list_tasks(args):
+def list_tasks(args, filename):
     tasks = load_file(filename)
     if len(tasks) == 0:
         print(f"No tasks added")
@@ -83,7 +80,7 @@ def list_tasks(args):
     
     print(json.dumps(new_tasks, indent='\t')) # json.dumps() outputs a nice formated string
 
-def mark_done(args):
+def mark_done(args, filename):
     tasks = load_file(filename)
     id = args.id
     if len(tasks) == 0 or id not in tasks:
@@ -94,7 +91,7 @@ def mark_done(args):
     save_file(tasks, filename)
     return id
 
-def mark_in_progress(args):
+def mark_in_progress(args, filename):
     tasks = load_file(filename)
     id = args.id
     if len(tasks) == 0 or id not in tasks:
@@ -105,7 +102,7 @@ def mark_in_progress(args):
     save_file(tasks, filename)
     return id
 
-def clear_tasks(args):
+def clear_tasks(args, filename):
     tasks = load_file(filename)
     if len(tasks) == 0:
         print(f"There are no tasks added")
@@ -121,38 +118,3 @@ def clear_tasks(args):
     
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(new_tasks, f, indent='\t') # json.dumps() outputs a nice formated string
-
-parser = ArgumentParser()
-subparsers = parser.add_subparsers()
-
-parser_add = subparsers.add_parser('add')
-parser_add.add_argument('task', type=str)
-parser_add.set_defaults(func=add)
-
-parser_update = subparsers.add_parser('update')
-parser_update.add_argument('id', type=int)
-parser_update.add_argument('new_desc', type=str)
-parser_update.set_defaults(func=update)
-
-parser_delete = subparsers.add_parser("delete")
-parser_delete.add_argument('id')
-parser_delete.set_defaults(func=delete)
-
-parser_list = subparsers.add_parser('list')
-parser_list.add_argument('tasks_type', type=str, choices=['in-progress', 'todo', 'done', 'all'], default="all", nargs='?')
-parser_list.set_defaults(func=list_tasks)
-
-parser_mark_done = subparsers.add_parser('mark-done')
-parser_mark_done.add_argument('id')
-parser_mark_done.set_defaults(func=mark_done)
-
-parser_mark_in_progress = subparsers.add_parser('mark-in-progress')
-parser_mark_in_progress.add_argument('id')
-parser_mark_in_progress.set_defaults(func=mark_in_progress)
-
-parser_clear = subparsers.add_parser('clear')
-parser_clear.add_argument('tasks_type', type=str, choices=['in-progress', 'todo', 'done', 'all'], default="all", nargs='?')
-parser_clear.set_defaults(func=clear_tasks)
-
-args = parser.parse_args()
-args.func(args)
