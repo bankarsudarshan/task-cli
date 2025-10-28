@@ -9,19 +9,35 @@ It’s best to install command-line tools in **isolation** using [`pipx`](https:
 
 ### 1️⃣ Install `pipx` (if not already installed)
 
+**On Linux/macOS:**
 ```bash
 python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 ```
-Restart your terminal (or run source ~/.bashrc) so pipx is available in your PATH.
+
+**On Windows:**
+```powershell
+pip install pipx
+python -m pipx ensurepath
+```
+
+**Important:** Restart your terminal after installation so pipx is available in your PATH.
+- On Linux/macOS: You may need to run `source ~/.bashrc` or `source ~/.zshrc`
+- On Windows: Close and reopen PowerShell/Command Prompt
 
 ### 2️⃣ Install `taskman` using pipx (from GitHub)
 
-You can install the tool directly from the GitHub repository using `pipx`:
-
+**On Linux/macOS:**
 ```bash
 pipx install git+https://github.com/bankarsudarshan/task-cli.git
 ```
+
+**On Windows:**
+```powershell
+python -m pipx install git+https://github.com/bankarsudarshan/task-cli.git
+```
+
+> **Note for Windows users:** If you get a "pipx is not recognized" error even after installation, use `python -m pipx` instead of just `pipx` until you've restarted your terminal and the PATH is updated.
 
 ## 🧑‍💻 Usage
 
