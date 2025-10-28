@@ -40,7 +40,8 @@ def main():
     parser_clear.set_defaults(func=task.clear_tasks)
 
     args = parser.parse_args()
-    args.func(args, filename)
+    result = args.func(args, filename)
+    print(result)
 
 
 if __name__ == "__main__":
