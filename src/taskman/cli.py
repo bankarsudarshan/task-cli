@@ -1,8 +1,9 @@
 from argparse import ArgumentParser
+from pathlib import Path
 
 from . import task
 
-filename = 'tasks.json'
+filename = Path('~/tasks.json').expanduser().resolve()
 
 
 def main():

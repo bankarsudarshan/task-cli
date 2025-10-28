@@ -5,6 +5,7 @@ description = "A CLI that helps you manage tasks"
 authors = [
   { name="Sudarshan Bankar", email="sudarshanbankar22@gmail.com" },
 ]
+readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
