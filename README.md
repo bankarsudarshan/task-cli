@@ -1,8 +1,8 @@
 # 🧰 Taskman — Command-Line Task Manager
 
 `taskman` is a simple and lightweight command-line tool to manage your daily tasks right from the terminal.  
-You can add, update, delete, list, and mark tasks as done or in-progress — all in one place.
-
+You can add, update, delete, list, and mark tasks as done or in-progress — all in one place.  
+This project's idea is taken from [roadmap.sh/projects](https://roadmap.sh/projects/task-tracker)
 ## 🚀 Installation
 
 It’s best to install command-line tools in **isolation** using [`pipx`](https://pypa.github.io/pipx/).
