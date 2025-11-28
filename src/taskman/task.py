@@ -24,12 +24,14 @@ def save_file(tasks, filename):
         json.dump(tasks, f, indent="\t")
 
 def add(args, filename):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
     new_task = {
         "id": -1,
         "description": args.task,
-        "status": "todo",
-        "createdAt": str(datetime.now()),
-        "updatedAt": str(datetime.now())
+        "status": "todo",  
+        "createdAt": now,
+        "updatedAt": now
     }
     tasks = load_file(filename)
     id = -1
@@ -54,6 +56,7 @@ def update(args, filename):
         return
     else:
         tasks[id]["description"] = args.new_desc
+        tasks[id]["updatedAt"] = datetime.now().strftime("%Y-%m-%d %H:%M")
     save_file(tasks, filename)
     return f"Task updated (ID:{id})"
 
