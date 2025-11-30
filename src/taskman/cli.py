@@ -29,6 +29,9 @@ def main():
 
     parser_list = subparsers.add_parser('list')
     parser_list.add_argument('tasks_type', type=str, choices=['in-progress', 'todo', 'done', 'all'], default="all", nargs='?')
+    parser_list.add_argument('-p', '--priority', type=str, choices=['low', 'medium', 'high'], default=None, help='Filter tasks by priority')
+    parser_list.add_argument('-sb', '--sort-by', type=str, choices=['id', 'createdAt', 'updatedAt', 'priority', 'status'], default='id', help='Sort tasks by a specific field')
+    parser_list.add_argument('-o', '--order', type=str, choices=['asc', 'desc'], default='asc', help='Sort order (ascending or descending)')
     parser_list.set_defaults(func=task.list_tasks)
 
     parser_mark_done = subparsers.add_parser('mark-done')
@@ -42,6 +45,10 @@ def main():
     parser_clear = subparsers.add_parser('clear')
     parser_clear.add_argument('tasks_type', type=str, choices=['in-progress', 'todo', 'done', 'all'], default="all", nargs='?')
     parser_clear.set_defaults(func=task.clear_tasks)
+
+    parser_search = subparsers.add_parser('search')
+    parser_search.add_argument('keyword', type=str, help='Text to search in task descriptions')
+    parser_search.set_defaults(func=task.search_tasks)
 
     args = parser.parse_args()
     result = args.func(args, filename)
