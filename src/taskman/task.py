@@ -29,7 +29,8 @@ def add(args, filename):
     new_task = {
         "id": -1,
         "description": args.task,
-        "status": "todo",  
+        "status": args.status,  
+        "priority": args.priority,
         "createdAt": now,
         "updatedAt": now
     }
@@ -50,15 +51,34 @@ def update(args, filename):
     if len(tasks) == 0:
         print(f"No task with (ID:{args.id})")
         return
-    id = str(args.id)
-    if id not in tasks:
+
+    task_id = str(args.id)
+    if task_id not in tasks:
         print(f"No task with (ID:{args.id})")
         return
-    else:
-        tasks[id]["description"] = args.new_desc
-        tasks[id]["updatedAt"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+        
+    task = tasks[task_id]
+    changed = False
+
+    if args.description is not None:
+        task["description"] = args.description
+        changed = True
+
+    if args.priority is not None:
+        task["priority"] = args.priority
+        changed = True
+
+    if args.status is not None:
+        task["status"] = args.status
+        changed = True
+
+    if not changed:
+        return f"No fields to update for (ID:{args.id})"
+
+    task["updatedAt"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+
     save_file(tasks, filename)
-    return f"Task updated (ID:{id})"
+    return f"Task updated (ID:{task_id})"
 
 def delete(args, filename):
     tasks = load_file(filename)
@@ -85,13 +105,21 @@ def list_tasks(args, filename):
     else:
         new_tasks = tasks
 
-    col_widths = [None, 40, None, None, None]
+    if not new_tasks:
+        print(f"No tasks with status '{tasks_type}'")
+        return
+
+    for task in new_tasks.values():
+        if "priority" not in task:
+            task["priority"] = "medium"
+
+    col_widths = [None, 40, None, None, None, None]
     return tabulate(
         new_tasks.values(), 
         headers="keys", 
         tablefmt="rounded_grid", 
         maxcolwidths=col_widths, 
-        colalign=['center']*5
+        colalign=['center']*6
     )
 
 def mark_done(args, filename):

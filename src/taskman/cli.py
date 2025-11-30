@@ -12,11 +12,15 @@ def main():
 
     parser_add = subparsers.add_parser('add')
     parser_add.add_argument('task', type=str)
+    parser_add.add_argument('-p', '--priority', type=str, choices=['low', 'medium', 'high'], default="medium", nargs='?', help='Priority of the task',)
+    parser_add.add_argument('-s', '--status', type=str, choices=['todo', 'in-progress', 'done'], default="todo", nargs='?', help='Status of the task',)
     parser_add.set_defaults(func=task.add)
 
     parser_update = subparsers.add_parser('update')
     parser_update.add_argument('id', type=int)
-    parser_update.add_argument('new_desc', type=str)
+    parser_update.add_argument('-d', '--description', type=str, help='New description of the task')
+    parser_update.add_argument('-p', '--priority', type=str, choices=['low', 'medium', 'high'], default=None, help='Priority of the task')
+    parser_update.add_argument('-s', '--status', type=str, choices=['todo', 'in-progress', 'done'], default=None, help='Status of the task')
     parser_update.set_defaults(func=task.update)
 
     parser_delete = subparsers.add_parser("delete")
