@@ -94,32 +94,62 @@ def delete(args, filename):
 def list_tasks(args, filename):
     tasks = load_file(filename)
     if len(tasks) == 0:
-        print(f"No tasks added")
+        print("No tasks added")
         return
+
     tasks_type = args.tasks_type
-    new_tasks = {}
-    if tasks_type != "all":
-        for id, task in tasks.items():
-            if task["status"] == tasks_type:
-                new_tasks[id] = task
-    else:
-        new_tasks = tasks
+    priority_filter = args.priority
+    sort_by = args.sort_by
 
-    if not new_tasks:
-        print(f"No tasks with status '{tasks_type}'")
+    filtered = []
+
+    for task_id, task in tasks.items():
+        # filter by status
+        if tasks_type != "all" and task.get("status") != tasks_type:
+            continue
+        
+        # filter by priority if requested
+        if priority_filter is not None and task["priority"] != priority_filter:
+            continue
+
+        filtered.append(task)
+    
+    if not filtered:
+        if priority_filter is not None:
+            print(f"No tasks with status '{tasks_type}' and priority '{priority_filter}'")
+        else:
+            print(f"No tasks with status '{tasks_type}'")
         return
 
-    for task in new_tasks.values():
-        if "priority" not in task:
-            task["priority"] = "medium"
+    # sorting
+    order = args.order
+    reverse = (order == "desc")
+
+    if sort_by == "priority":
+        priority_order = {"high": 0, "medium": 1, "low": 2}
+        filtered.sort(
+            key=lambda t: priority_order.get(t.get("priority"), 3),
+            reverse=reverse,
+        )
+    elif sort_by == "status":
+        status_order = {"todo": 0, "in-progress": 1, "done": 2}
+        filtered.sort(
+            key=lambda t: status_order.get(t.get("status"), 3),
+            reverse=reverse,
+        )
+    else:
+        filtered.sort(
+            key=lambda t: t.get(sort_by, ""),
+            reverse=reverse,
+        )
 
     col_widths = [None, 40, None, None, None, None]
     return tabulate(
-        new_tasks.values(), 
-        headers="keys", 
-        tablefmt="rounded_grid", 
-        maxcolwidths=col_widths, 
-        colalign=['center']*6
+        filtered,
+        headers="keys",
+        tablefmt="rounded_grid",
+        maxcolwidths=col_widths,
+        colalign=['center'] * 6
     )
 
 def mark_done(args, filename):
@@ -162,3 +192,27 @@ def clear_tasks(args, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(new_tasks, f, indent='\t') # json.dumps() outputs a nice formated string
     return result
+
+def search_tasks(args, filename):
+    tasks = load_file(filename)
+    if len(tasks) == 0:
+        return "No tasks added"
+
+    keyword = args.keyword.lower()
+    matches = {}
+
+    for task_id, task in tasks.items():
+        if keyword in task["description"].lower():
+            matches[task_id] = task
+
+    if not matches:
+        return f"No tasks found containing: {args.keyword}"
+
+    col_widths = [None, 40, None, None, None, None]
+    return tabulate(
+        matches.values(),
+        headers="keys",
+        tablefmt="rounded_grid",
+        maxcolwidths=col_widths,
+        colalign=["center"] * 6
+    )
