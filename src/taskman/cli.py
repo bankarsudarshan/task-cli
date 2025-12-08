@@ -14,6 +14,7 @@ def main():
     parser_add.add_argument('task', type=str)
     parser_add.add_argument('-p', '--priority', type=str, choices=['low', 'medium', 'high'], default="medium", nargs='?', help='Priority of the task',)
     parser_add.add_argument('-s', '--status', type=str, choices=['todo', 'in-progress', 'done'], default="todo", nargs='?', help='Status of the task',)
+    parser_add.add_argument('--due', type=str, default=None, help='Due date/time in format YYYY-MM-DD HH:MM')
     parser_add.set_defaults(func=task.add)
 
     parser_update = subparsers.add_parser('update')
@@ -21,6 +22,7 @@ def main():
     parser_update.add_argument('-d', '--description', type=str, help='New description of the task')
     parser_update.add_argument('-p', '--priority', type=str, choices=['low', 'medium', 'high'], default=None, help='Priority of the task')
     parser_update.add_argument('-s', '--status', type=str, choices=['todo', 'in-progress', 'done'], default=None, help='Status of the task')
+    parser_update.add_argument('--due', type=str, default=None, help='Update due date/time (YYYY-MM-DD HH:MM)')
     parser_update.set_defaults(func=task.update)
 
     parser_delete = subparsers.add_parser("delete")
@@ -49,6 +51,17 @@ def main():
     parser_search = subparsers.add_parser('search')
     parser_search.add_argument('keyword', type=str, help='Text to search in task descriptions')
     parser_search.set_defaults(func=task.search_tasks)
+
+    # google calender
+    parser_gcal = subparsers.add_parser('gcal')
+    gcal_subparsers = parser_gcal.add_subparsers()
+
+    parser_gcal_add = gcal_subparsers.add_parser('add')
+    parser_gcal_add.add_argument('id', type=int)
+    parser_gcal_add.set_defaults(func=task.gcal_add)
+
+    parser_gcal_sync = gcal_subparsers.add_parser('sync')
+    parser_gcal_sync.set_defaults(func=task.gcal_sync)
 
     args = parser.parse_args()
     result = args.func(args, filename)

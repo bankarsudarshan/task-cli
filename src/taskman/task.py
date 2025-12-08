@@ -3,6 +3,7 @@ from datetime import datetime
 import os
 
 from tabulate import tabulate
+from . import gcal
 
 def load_file(filename):
     if not os.path.isfile(filename):
@@ -32,7 +33,8 @@ def add(args, filename):
         "status": args.status,  
         "priority": args.priority,
         "createdAt": now,
-        "updatedAt": now
+        "updatedAt": now,
+        "dueAt": args.due,
     }
     tasks = load_file(filename)
     id = -1
@@ -70,6 +72,10 @@ def update(args, filename):
 
     if args.status is not None:
         task["status"] = args.status
+        changed = True
+
+    if args.due is not None:
+        task["dueAt"] = args.due
         changed = True
 
     if not changed:
@@ -112,7 +118,10 @@ def list_tasks(args, filename):
         if priority_filter is not None and task["priority"] != priority_filter:
             continue
 
-        filtered.append(task)
+        # Create a copy with formatted dueAt
+        display_task = task.copy()
+        display_task["dueAt"] = task.get("dueAt") or "No due date"
+        filtered.append(display_task)
     
     if not filtered:
         if priority_filter is not None:
@@ -143,13 +152,13 @@ def list_tasks(args, filename):
             reverse=reverse,
         )
 
-    col_widths = [None, 40, None, None, None, None]
+    col_widths = [None, 40, None, None, None, None, None]
     return tabulate(
         filtered,
         headers="keys",
         tablefmt="rounded_grid",
         maxcolwidths=col_widths,
-        colalign=['center'] * 6
+        colalign=['center'] * 7
     )
 
 def mark_done(args, filename):
@@ -199,20 +208,50 @@ def search_tasks(args, filename):
         return "No tasks added"
 
     keyword = args.keyword.lower()
-    matches = {}
+    matches = []
 
     for task_id, task in tasks.items():
         if keyword in task["description"].lower():
-            matches[task_id] = task
+            display_task = task.copy()
+            display_task["dueAt"] = task.get("dueAt") or "No due date"
+            matches.append(display_task)
 
     if not matches:
         return f"No tasks found containing: {args.keyword}"
 
-    col_widths = [None, 40, None, None, None, None]
+    col_widths = [None, 40, None, None, None, None, None]
     return tabulate(
-        matches.values(),
+        matches,
         headers="keys",
         tablefmt="rounded_grid",
         maxcolwidths=col_widths,
-        colalign=["center"] * 6
+        colalign=["center"] * 7
     )
+
+def gcal_add(args, filename):
+    tasks = load_file(filename)
+    task_id = str(args.id)
+
+    if task_id not in tasks:
+        return f"No task with (ID:{args.id})"
+
+    task = tasks[task_id]
+
+    if not task.get("dueAt"):
+        return f"Task (ID:{args.id}) has no dueAt set"
+
+    gcal.create_event_for_task(task)
+    return f"Task (ID:{args.id}) exported to Google Calendar"
+
+
+def gcal_sync(args, filename):
+    tasks = load_file(filename)
+    due_tasks = [t for t in tasks.values() if t.get("dueAt")]
+
+    if not due_tasks:
+        return "No tasks with dueAt to sync"
+
+    for task in due_tasks:
+        gcal.create_event_for_task(task)
+
+    return f"Synced {len(due_tasks)} tasks to Google Calendar"
