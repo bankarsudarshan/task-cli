@@ -1,28 +1,9 @@
 import json
 from datetime import datetime
-import os
 
-from tabulate import tabulate
-from . import gcal
+from taskman import gcal
+from taskman.helpers import load_file, save_file, render_tasks_table
 
-def load_file(filename):
-    if not os.path.isfile(filename):
-        with open(filename, 'w', encoding='utf-8') as f:
-            pass
-        return {}
-    
-    elif os.stat(filename).st_size == 0:
-        return {}
-    
-    tasks = None
-    with open(filename, 'r', encoding='utf-8') as f:
-        tasks = json.load(f)
-    
-    return tasks
-
-def save_file(tasks, filename):
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(tasks, f, indent="\t")
 
 def add(args, filename):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -152,14 +133,7 @@ def list_tasks(args, filename):
             reverse=reverse,
         )
 
-    col_widths = [None, 40, None, None, None, None, None]
-    return tabulate(
-        filtered,
-        headers="keys",
-        tablefmt="rounded_grid",
-        maxcolwidths=col_widths,
-        colalign=['center'] * 7
-    )
+    return render_tasks_table(filtered)
 
 def mark_done(args, filename):
     tasks = load_file(filename)
@@ -219,14 +193,7 @@ def search_tasks(args, filename):
     if not matches:
         return f"No tasks found containing: {args.keyword}"
 
-    col_widths = [None, 40, None, None, None, None, None]
-    return tabulate(
-        matches,
-        headers="keys",
-        tablefmt="rounded_grid",
-        maxcolwidths=col_widths,
-        colalign=["center"] * 7
-    )
+    return render_tasks_table(matches)
 
 def gcal_add(args, filename):
     tasks = load_file(filename)
