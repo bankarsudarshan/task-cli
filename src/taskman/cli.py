@@ -7,60 +7,218 @@ filename = Path('~/tasks.json').expanduser().resolve()
 
 
 def main():
-    parser = ArgumentParser()
-    subparsers = parser.add_subparsers()
+    parser = ArgumentParser(
+        prog="taskman",
+        description="A simple CLI-based task manager with priorities, due dates, and Google Calendar integration.",
+    )
 
-    parser_add = subparsers.add_parser('add')
-    parser_add.add_argument('task', type=str)
-    parser_add.add_argument('-p', '--priority', type=str, choices=['low', 'medium', 'high'], default="medium", nargs='?', help='Priority of the task',)
-    parser_add.add_argument('-s', '--status', type=str, choices=['todo', 'in-progress', 'done'], default="todo", nargs='?', help='Status of the task',)
-    parser_add.add_argument('--due', type=str, default=None, help='Due date/time in format YYYY-MM-DD HH:MM')
+    subparsers = parser.add_subparsers(
+        title="Commands",
+        dest="command",
+        required=True,
+        help="Available task management commands",
+    )
+
+    # ---------------- ADD ----------------
+    parser_add = subparsers.add_parser(
+        "add",
+        help="Add a new task",
+        description="Create a new task with description, priority, status, and optional due date.",
+    )
+    parser_add.add_argument(
+        "task",
+        type=str,
+        help="Task description (wrap in quotes if it contains spaces)",
+    )
+    parser_add.add_argument(
+        "-p", "--priority",
+        type=str,
+        choices=["low", "medium", "high"],
+        default="medium",
+        nargs="?",
+        help="Priority of the task (default: medium)",
+    )
+    parser_add.add_argument(
+        "-s", "--status",
+        type=str,
+        choices=["todo", "in-progress", "done"],
+        default="todo",
+        nargs="?",
+        help="Initial status of the task (default: todo)",
+    )
+    parser_add.add_argument(
+        "--due",
+        type=str,
+        default=None,
+        help="Due date/time in format YYYY-MM-DD HH:MM",
+    )
     parser_add.set_defaults(func=task.add)
 
-    parser_update = subparsers.add_parser('update')
-    parser_update.add_argument('id', type=int)
-    parser_update.add_argument('-d', '--description', type=str, help='New description of the task')
-    parser_update.add_argument('-p', '--priority', type=str, choices=['low', 'medium', 'high'], default=None, help='Priority of the task')
-    parser_update.add_argument('-s', '--status', type=str, choices=['todo', 'in-progress', 'done'], default=None, help='Status of the task')
-    parser_update.add_argument('--due', type=str, default=None, help='Update due date/time (YYYY-MM-DD HH:MM)')
+    # ---------------- UPDATE ----------------
+    parser_update = subparsers.add_parser(
+        "update",
+        help="Update an existing task",
+        description="Update task fields such as description, priority, status, or due date.",
+    )
+    parser_update.add_argument(
+        "id",
+        type=int,
+        help="ID of the task to update",
+    )
+    parser_update.add_argument(
+        "-d", "--description",
+        type=str,
+        help="New task description",
+    )
+    parser_update.add_argument(
+        "-p", "--priority",
+        type=str,
+        choices=["low", "medium", "high"],
+        help="Update task priority",
+    )
+    parser_update.add_argument(
+        "-s", "--status",
+        type=str,
+        choices=["todo", "in-progress", "done"],
+        help="Update task status",
+    )
+    parser_update.add_argument(
+        "--due",
+        type=str,
+        help="Update due date/time (YYYY-MM-DD HH:MM)",
+    )
     parser_update.set_defaults(func=task.update)
 
-    parser_delete = subparsers.add_parser("delete")
-    parser_delete.add_argument('id')
+    # ---------------- DELETE ----------------
+    parser_delete = subparsers.add_parser(
+        "delete",
+        help="Delete a task",
+        description="Remove a task permanently using its ID.",
+    )
+    parser_delete.add_argument(
+        "id",
+        help="ID of the task to delete",
+    )
     parser_delete.set_defaults(func=task.delete)
 
-    parser_list = subparsers.add_parser('list')
-    parser_list.add_argument('tasks_type', type=str, choices=['in-progress', 'todo', 'done', 'all'], default="all", nargs='?')
-    parser_list.add_argument('-p', '--priority', type=str, choices=['low', 'medium', 'high'], default=None, help='Filter tasks by priority')
-    parser_list.add_argument('-sb', '--sort-by', type=str, choices=['id', 'createdAt', 'updatedAt', 'priority', 'status'], default='id', help='Sort tasks by a specific field')
-    parser_list.add_argument('-o', '--order', type=str, choices=['asc', 'desc'], default='asc', help='Sort order (ascending or descending)')
+    # ---------------- LIST ----------------
+    parser_list = subparsers.add_parser(
+        "list",
+        help="List tasks",
+        description="List tasks filtered by status, priority, and sorting options.",
+    )
+    parser_list.add_argument(
+        "tasks_type",
+        type=str,
+        choices=["in-progress", "todo", "done", "all"],
+        default="all",
+        nargs="?",
+        help="Filter tasks by status (default: all)",
+    )
+    parser_list.add_argument(
+        "-p", "--priority",
+        type=str,
+        choices=["low", "medium", "high"],
+        help="Filter tasks by priority",
+    )
+    parser_list.add_argument(
+        "-sb", "--sort-by",
+        type=str,
+        choices=["id", "createdAt", "updatedAt", "priority", "status"],
+        default="id",
+        help="Sort tasks by a specific field (default: id)",
+    )
+    parser_list.add_argument(
+        "-o", "--order",
+        type=str,
+        choices=["asc", "desc"],
+        default="asc",
+        help="Sort order (default: asc)",
+    )
     parser_list.set_defaults(func=task.list_tasks)
 
-    parser_mark_done = subparsers.add_parser('mark-done')
-    parser_mark_done.add_argument('id')
+    # ---------------- MARK DONE ----------------
+    parser_mark_done = subparsers.add_parser(
+        "mark-done",
+        help="Mark a task as done",
+        description="Set task status to 'done' using its ID.",
+    )
+    parser_mark_done.add_argument(
+        "id",
+        help="ID of the task",
+    )
     parser_mark_done.set_defaults(func=task.mark_done)
 
-    parser_mark_in_progress = subparsers.add_parser('mark-in-progress')
-    parser_mark_in_progress.add_argument('id')
+    # ---------------- MARK IN PROGRESS ----------------
+    parser_mark_in_progress = subparsers.add_parser(
+        "mark-in-progress",
+        help="Mark a task as in-progress",
+        description="Set task status to 'in-progress' using its ID.",
+    )
+    parser_mark_in_progress.add_argument(
+        "id",
+        help="ID of the task",
+    )
     parser_mark_in_progress.set_defaults(func=task.mark_in_progress)
 
-    parser_clear = subparsers.add_parser('clear')
-    parser_clear.add_argument('tasks_type', type=str, choices=['in-progress', 'todo', 'done', 'all'], default="all", nargs='?')
+    # ---------------- CLEAR ----------------
+    parser_clear = subparsers.add_parser(
+        "clear",
+        help="Clear tasks",
+        description="Delete tasks by status or clear all tasks.",
+    )
+    parser_clear.add_argument(
+        "tasks_type",
+        type=str,
+        choices=["in-progress", "todo", "done", "all"],
+        default="all",
+        nargs="?",
+        help="Type of tasks to clear (default: all)",
+    )
     parser_clear.set_defaults(func=task.clear_tasks)
 
-    parser_search = subparsers.add_parser('search')
-    parser_search.add_argument('keyword', type=str, help='Text to search in task descriptions')
+    # ---------------- SEARCH ----------------
+    parser_search = subparsers.add_parser(
+        "search",
+        help="Search tasks",
+        description="Search tasks by keyword in the description.",
+    )
+    parser_search.add_argument(
+        "keyword",
+        type=str,
+        help="Keyword to search for",
+    )
     parser_search.set_defaults(func=task.search_tasks)
 
-    # google calender
-    parser_gcal = subparsers.add_parser('gcal')
-    gcal_subparsers = parser_gcal.add_subparsers()
+    # ---------------- GOOGLE CALENDAR ----------------
+    parser_gcal = subparsers.add_parser(
+        "gcal",
+        help="Google Calendar integration",
+        description="Sync tasks with Google Calendar.",
+    )
+    gcal_subparsers = parser_gcal.add_subparsers(
+        title="Google Calendar Commands",
+        dest="gcal_command",
+        required=True,
+    )
 
-    parser_gcal_add = gcal_subparsers.add_parser('add')
-    parser_gcal_add.add_argument('id', type=int)
+    parser_gcal_add = gcal_subparsers.add_parser(
+        "add",
+        help="Export a task to Google Calendar",
+        description="Create a Google Calendar event for a task with a due date.",
+    )
+    parser_gcal_add.add_argument(
+        "id",
+        type=int,
+        help="ID of the task to export",
+    )
     parser_gcal_add.set_defaults(func=task.gcal_add)
 
-    parser_gcal_sync = gcal_subparsers.add_parser('sync')
+    parser_gcal_sync = gcal_subparsers.add_parser(
+        "sync",
+        help="Sync all due tasks to Google Calendar",
+        description="Export all tasks that have a due date to Google Calendar.",
+    )
     parser_gcal_sync.set_defaults(func=task.gcal_sync)
 
     args = parser.parse_args()
