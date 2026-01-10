@@ -4,35 +4,76 @@
 Supports **priority**, **status updates**, **search**, **sorting**, **filtered listing**, and **Google Calendar integration** — without needing any GUI or browser.  
 Inspired by the project idea on [roadmap.sh](https://roadmap.sh/projects/task-tracker).
 
----
 
 ## 🚀 Installation
 
-You should install CLI tools **in isolation** using `pipx`.
+The recommended way to install **taskman** is using **`uv`**, which provides fast, isolated installs for CLI tools (similar to `pipx`, but faster and simpler).
 
-### 1️⃣ Install `pipx` (if not already installed)
+### 1️⃣ Install `uv` (if not already installed)
+<details>
+<summary><strong>Linux / macOS</strong></summary>
 
-**Linux/macOS**
 ```bash
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
+curl -Ls https://astral.sh/uv/install.sh | sh
 ```
+</details>
+<details>
 
-**Windows**
+<summary><strong>Windows (PowerShell)</strong></summary>
 
 ```powershell
-pip install pipx
-python -m pipx ensurepath
+irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-> Restart your terminal after installation.
-> If it still fails, use `python -m pipx` instead of `pipx`.
-
-### 2️⃣ Install `taskman` using pipx
+Verify installation:
 
 ```bash
-pipx install git+https://github.com/bankarsudarshan/task-cli.git
+uv --version
 ```
+</details>
+
+### 2️⃣ Install `taskman` using `uv`
+
+```bash
+uv tool install git+https://github.com/bankarsudarshan/task-cli.git
+```
+
+### 3️⃣ Verify installation
+
+```bash
+taskman --help
+```
+
+### 4️⃣ More...
+<details>
+<summary> 🔄 Upgrade </summary>
+
+```bash
+uv tool upgrade taskman
+```
+</details>
+
+<details>
+<summary> 🧹 Uninstall </summary>
+
+```bash
+uv tool uninstall taskman
+```
+</details>
+
+<details>
+<summary> 🛠 Development install (optional)  </h3></summary>
+
+If you’re working on the source code:
+
+```bash
+git clone https://github.com/bankarsudarshan/task-cli.git
+cd task-cli
+uv sync
+source .venv/bin/activate
+taskman
+```
+</details>
 
 ---
 
@@ -44,30 +85,42 @@ Run from anywhere:
 taskman [command] [options]
 ```
 
----
+### 📝 Commands Overview
 
-## 📝 Commands Overview
+| Command                 | Description                         |
+| ----------------------- | ----------------------------------- |
+| `add <desc>`            | Add a new task                      |
+| `update <id>`           | Update task fields                  |
+| `delete <id>`           | Delete a task                       |
+| `list`                  | List tasks (with filters & sorting) |
+| `mark-done <id>`        | Mark task as done                   |
+| `mark-in-progress <id>` | Mark task as in-progress            |
+| `clear [status]`        | Remove tasks                        |
+| `search <text>`         | Search task descriptions            |
+| `gcal add <id>`         | Add task to Google Calendar         |
+| `gcal sync`             | Sync tasks with Calendar            |
 
-| Command                 | Purpose                                     | Example                           |
-| ----------------------- | ------------------------------------------- | --------------------------------- |
-| `add <desc>`            | Add new task                                | `taskman add "Buy milk"`          |
-| `add <desc> -p high`    | Add with priority (`low`, `medium`, `high`) | `taskman add "Study DSA" -p high` |
-| `update <id> [options]` | Update task fields                          | See below                         |
-| `delete <id>`           | Delete task                                 | `taskman delete 2`                |
-| `list`                  | List all tasks                              | `taskman list`                    |
-| `list todo -p high`     | Filter by status + priority                 | `taskman list todo -p high`       |
-| `mark-done <id>`        | Mark as done                                | `taskman mark-done 1`             |
-| `mark-in-progress <id>` | Mark as in-progress                         | `taskman mark-in-progress 3`      |
-| `clear [status]`        | Remove tasks                                | `taskman clear done`              |
-| `search <text>`         | Search descriptions                         | `taskman search book`             |
-| `gcal add <id>`         | Export a task to Google Calendar            | `taskman gcal add 3`              |
-| `gcal sync`             | Sync all tasks with due dates to Calendar   | `taskman gcal sync`               |
+### More details on usage of commands
 
----
+<details>
+<summary>➕ Add Tasks</summary>
 
-## 🔄 Update Command (Flexible)
+```bash
+taskman add "Buy milk"
+taskman add "Study DSA" -p high
+```
 
-You can update **any field independently** — description is optional.
+Priority values:
+
+```
+low | medium | high
+```
+</details>
+
+<details>
+<summary>✏️ Update Tasks</summary>
+
+You can update **any field independently**.
 
 ```bash
 # Change only description
@@ -83,9 +136,14 @@ taskman update 1 -s done
 taskman update 1 -d "Final revision" -p high -s done
 ```
 
----
+</details>
 
-## 📋 List Command — Filters + Sorting
+
+<details>
+<summary>📋 List Tasks (with sorting and filtering)</summary>
+
+<details>
+<summary>Filters</summary>
 
 ```bash
 # All tasks
@@ -94,12 +152,18 @@ taskman list
 # Only done tasks
 taskman list done
 
-# Only high priority
+# High priority tasks
 taskman list -p high
 
 # Done + high priority
 taskman list done -p high
+```
+</details>
 
+<details>
+<summary>Sorting</summary>
+
+```bash
 # Sort by priority (high → low)
 taskman list --sort-by priority
 
@@ -116,20 +180,45 @@ id, createdAt, updatedAt, priority, status
 Sort order:
 
 ```
---order asc     (default)
+--order asc   (default)
 --order desc
 ```
 
----
+</details>
 
-## 🔍 Search Tasks
+</details>
+
+<details>
+<summary>🔄 Updating Task Status</summary>
+
+```bash
+taskman mark-done 1
+taskman mark-in-progress 3
+```
+</details>
+
+<details>
+<summary>🧹 Clear Tasks</summary>
+
+```bash
+# Remove all done tasks
+taskman clear done
+
+# Remove all tasks
+taskman clear
+```
+</details>
+
+<details>
+<summary>🔍 Search Tasks</summary>
 
 ```bash
 taskman search "report"
 taskman search book
 ```
 
-Returns all tasks whose **description** contains the given keyword (case-insensitive).
+Searches task **descriptions** (case-insensitive).
+</details>
 
 ---
 
@@ -192,7 +281,6 @@ Rename the downloaded file to:
 credentials.json
 ```
 
----
 
 ### ✅ Step 2 — Place `credentials.json` on Your System
 
@@ -208,7 +296,6 @@ Then move the file here:
 mv ~/Downloads/credentials.json ~/.config/taskman/credentials.json
 ```
 
----
 
 ### ✅ Step 3 — Add a Task with a Due Date
 
@@ -216,7 +303,6 @@ mv ~/Downloads/credentials.json ~/.config/taskman/credentials.json
 taskman add "Submit assignment" --due "2025-12-10 18:00"
 ```
 
----
 
 ### ✅ Step 4 — Export Task to Google Calendar
 
@@ -237,7 +323,6 @@ On first run:
 
 From now on, no further login is needed.
 
----
 
 ### ✅ Sync All Due Tasks at Once
 
@@ -247,7 +332,6 @@ taskman gcal sync
 
 This will export **all tasks that contain a `dueAt` field**.
 
----
 
 ## 🔐 Security Notes
 
