@@ -37,7 +37,7 @@ def render_tasks_table(rows):
 
     # Description gets more width, others default
     col_widths = [40 if k == "description" 
-                  else 20 if k in ("createdAt", "updatedAt") 
+                  else 15 if k in ("createdAt", "updatedAt") 
                   else None 
                   for k in headers]
 

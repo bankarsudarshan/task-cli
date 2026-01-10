@@ -22,7 +22,7 @@ def add(args, filename):
     if len(tasks) == 0:
         id = 1
     else:
-        id = int(max(tasks)) + 1
+        id = max(int(id) for id in tasks.keys()) + 1
 
     new_task["id"] = id
     tasks[id] = new_task
