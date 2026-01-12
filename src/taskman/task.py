@@ -5,7 +5,7 @@ from taskman import gcal
 from taskman.helpers import load_file, save_file, render_tasks_table
 
 
-def add(args, filename):
+def add(args, tasks_file):
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     new_task = {
@@ -17,7 +17,7 @@ def add(args, filename):
         "updatedAt": now,
         "dueAt": args.due,
     }
-    tasks = load_file(filename)
+    tasks = load_file(tasks_file)
     id = -1
     if len(tasks) == 0:
         id = 1
@@ -26,11 +26,11 @@ def add(args, filename):
 
     new_task["id"] = id
     tasks[id] = new_task
-    save_file(tasks, filename)
+    save_file(tasks, tasks_file)
     return f"Task added (ID:{id})"
 
-def update(args, filename):
-    tasks = load_file(filename)
+def update(args, tasks_file):
+    tasks = load_file(tasks_file)
     if len(tasks) == 0:
         print(f"No task with (ID:{args.id})")
         return
@@ -64,22 +64,22 @@ def update(args, filename):
 
     task["updatedAt"] = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    save_file(tasks, filename)
+    save_file(tasks, tasks_file)
     return f"Task updated (ID:{task_id})"
 
-def delete(args, filename):
-    tasks = load_file(filename)
+def delete(args, tasks_file):
+    tasks = load_file(tasks_file)
     id = args.id
     if id not in tasks:
         print(f"No task with (ID:{id})")
         return
     else:
         del tasks[id]
-    save_file(tasks, filename)
+    save_file(tasks, tasks_file)
     return f"Task deleted (ID:{id})"
 
-def list_tasks(args, filename):
-    tasks = load_file(filename)
+def list_tasks(args, tasks_file):
+    tasks = load_file(tasks_file)
     if len(tasks) == 0:
         print("No tasks added")
         return
@@ -135,30 +135,34 @@ def list_tasks(args, filename):
 
     return render_tasks_table(filtered)
 
-def mark_done(args, filename):
-    tasks = load_file(filename)
+def mark_done(args, tasks_file, archived_file):
+    tasks = load_file(tasks_file)
     id = args.id
     if len(tasks) == 0 or id not in tasks:
         print(f"No task with (ID:{id})")
         return
-    else:
-        tasks[id]['status'] = "done"
-    save_file(tasks, filename)
+    task = tasks[id]
+    del tasks[id]
+    save_file(tasks, tasks_file)
+    archived = load_file(archived_file)
+    archived[id] = task
+    save_file(archived, archived_file)
+
     return f"Task marked as done (ID:{id})"
 
-def mark_in_progress(args, filename):
-    tasks = load_file(filename)
+def mark_in_progress(args, tasks_file):
+    tasks = load_file(tasks_file)
     id = args.id
     if len(tasks) == 0 or id not in tasks:
         print(f"No task with (ID:{id})")
         return
     else:
         tasks[id]['status'] = "in-progress"
-    save_file(tasks, filename)
+    save_file(tasks, tasks_file)
     return f"Task marked as in-progress (ID:{id})"
 
-def clear_tasks(args, filename):
-    tasks = load_file(filename)
+def clear_tasks(args, tasks_file):
+    tasks = load_file(tasks_file)
     if len(tasks) == 0:
         return f"There are no tasks added"
     tasks_type = args.tasks_type
@@ -172,12 +176,12 @@ def clear_tasks(args, filename):
         new_tasks = {}
         result = f"Cleared all tasks"
     
-    with open(filename, 'w', encoding='utf-8') as f:
+    with open(tasks_file, 'w', encoding='utf-8') as f:
         json.dump(new_tasks, f, indent='\t') # json.dumps() outputs a nice formated string
     return result
 
-def search_tasks(args, filename):
-    tasks = load_file(filename)
+def search_tasks(args, tasks_file):
+    tasks = load_file(tasks_file)
     if len(tasks) == 0:
         return "No tasks added"
 
@@ -195,8 +199,8 @@ def search_tasks(args, filename):
 
     return render_tasks_table(matches)
 
-def gcal_add(args, filename):
-    tasks = load_file(filename)
+def gcal_add(args, tasks_file):
+    tasks = load_file(tasks_file)
     task_id = str(args.id)
 
     if task_id not in tasks:
@@ -211,8 +215,8 @@ def gcal_add(args, filename):
     return f"Task (ID:{args.id}) exported to Google Calendar"
 
 
-def gcal_sync(args, filename):
-    tasks = load_file(filename)
+def gcal_sync(args, tasks_file):
+    tasks = load_file(tasks_file)
     due_tasks = [t for t in tasks.values() if t.get("dueAt")]
 
     if not due_tasks:

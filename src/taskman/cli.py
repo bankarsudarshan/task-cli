@@ -1,9 +1,13 @@
+import os
 from argparse import ArgumentParser
 from pathlib import Path
 
 from . import task
 
-filename = Path('~/tasks.json').expanduser().resolve()
+taskman_dir = Path('~/taskman').expanduser().resolve()
+tasks_file = os.path.join(taskman_dir, "tasks.json")
+archived_file = os.path.join(taskman_dir, "archived.json")
+os.makedirs(taskman_dir, exist_ok=True)
 
 
 def main():
@@ -14,7 +18,7 @@ def main():
 
     subparsers = parser.add_subparsers(
         title="Commands",
-        dest="command",
+        dest="l1_subparser",
         required=True,
         help="Available task management commands",
     )
@@ -137,6 +141,48 @@ def main():
     )
     parser_list.set_defaults(func=task.list_tasks)
 
+    list_subparsers = parser_list.add_subparsers(
+        dest="l2_subparser_list",
+        description="More granular commands on top of list command"
+    )
+
+    parser_list_archived = list_subparsers.add_parser(
+        "archived",
+        help="List done tasks",
+        description="List done / archived tasks"
+    )
+    parser_list_archived.add_argument(
+        "tasks_type",
+        type=str,
+        choices=["in-progress", "todo", "done", "all"],
+        default="all",
+        nargs="?",
+        help="Filter tasks by status (default: all)",
+    )
+    parser_list_archived.add_argument(
+        "-p", "--priority",
+        type=str,
+        choices=["low", "medium", "high"],
+        help="Filter tasks by priority",
+    )
+    parser_list_archived.add_argument(
+        "-sb", "--sort-by",
+        type=str,
+        choices=["id", "createdAt", "updatedAt", "priority", "status"],
+        default="id",
+        help="Sort tasks by a specific field (default: id)",
+    )
+    parser_list_archived.add_argument(
+        "-o", "--order",
+        type=str,
+        choices=["asc", "desc"],
+        default="asc",
+        help="Sort order (default: asc)",
+    )
+    
+    parser_list_archived.set_defaults(func=task.list_tasks)
+
+
     # ---------------- MARK DONE ----------------
     parser_mark_done = subparsers.add_parser(
         "mark-done",
@@ -222,7 +268,13 @@ def main():
     parser_gcal_sync.set_defaults(func=task.gcal_sync)
 
     args = parser.parse_args()
-    result = args.func(args, filename)
+
+    if args.l1_subparser == 'mark-done':
+        result = args.func(args, tasks_file, archived_file)
+    elif args.l1_subparser == 'list' and args.l2_subparser_list == 'archived':
+        result = args.func(args, archived_file)
+    else:
+        result = args.func(args, tasks_file)
     print(result)
 
 
