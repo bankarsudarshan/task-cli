@@ -1,29 +1,32 @@
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from taskman import gcal
 from taskman.helpers import load_file, render_tasks_table, save_file
+from taskman.models import Metadata, Task, TasksFile
 
 
 def add(args, tasks_file):
-    now = datetime.now(tz=ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M")
+    new_task = Task(
+        description=args.task,
+        status=args.status,
+        priority=args.priority,
+        due_at=args.due,
+    )
 
-    new_task = {
-        "id": -1,
-        "description": args.task,
-        "status": args.status,
-        "priority": args.priority,
-        "createdAt": now,
-        "updatedAt": now,
-        "dueAt": args.due,
-    }
-    tasks = load_file(tasks_file)
-    tid = -1
-    tid = 1 if len(tasks) == 0 else max(int(tid) for tid in tasks) + 1
+    tasks_data = load_file(tasks_file)
+    (tasks, metadata) = (
+        tasks_data if tasks_data else ([], Metadata(n_tasks=0, last_tid=1))
+    )
 
-    new_task["id"] = tid
-    tasks[tid] = new_task
-    save_file(tasks, tasks_file)
+    tid: int = metadata.last_tid + 1
+    new_task.id = tid
+    tasks.append(new_task)
+    metadata.last_tid = tid
+    metadata.n_tasks += 1
+
+    new_data = TasksFile(tasks=tasks, metadata=metadata)
+
+    save_file(new_data, tasks_file)
     return f"Task added (ID:{tid})"
 
 
@@ -54,13 +57,13 @@ def update(args, tasks_file):
         changed = True
 
     if args.due is not None:
-        task["dueAt"] = args.due
+        task["due_at"] = args.due
         changed = True
 
     if not changed:
         return f"No fields to update for (ID:{args.id})"
 
-    task["updatedAt"] = datetime.now(tz="Asia/Kolkata").strftime("%Y-%m-%d %H:%M")
+    task["updated_at"] = datetime.now(tz="Asia/Kolkata").strftime("%Y-%m-%d %H:%M")
 
     save_file(tasks, tasks_file)
     return f"Task updated (ID:{task_id})"
@@ -78,7 +81,7 @@ def delete(args, tasks_file):
 
 
 def list_tasks(args, tasks_file):
-    tasks = load_file(tasks_file)
+    tasks, _ = load_file(tasks_file)
     if len(tasks) == 0:
         print("No tasks added")
         return None
@@ -89,7 +92,9 @@ def list_tasks(args, tasks_file):
 
     filtered = []
 
-    for task in tasks.values():
+    for task_model in tasks:
+        task = task_model.model_dump()
+
         # filter by status
         if tasks_type != "all" and task.get("status") != tasks_type:
             continue
@@ -98,10 +103,7 @@ def list_tasks(args, tasks_file):
         if priority_filter is not None and task["priority"] != priority_filter:
             continue
 
-        # Create a copy with formatted dueAt
-        display_task = task.copy()
-        display_task["dueAt"] = task.get("dueAt") or "No due date"
-        filtered.append(display_task)
+        filtered.append(task)
 
     if not filtered:
         if priority_filter is not None:
@@ -194,7 +196,7 @@ def search_tasks(args, tasks_file):
     for task in tasks.values():
         if keyword in task["description"].lower():
             display_task = task.copy()
-            display_task["dueAt"] = task.get("dueAt") or "No due date"
+            display_task["due_at"] = task.get("due_at") or "No due date"
             matches.append(display_task)
 
     if not matches:
@@ -212,8 +214,8 @@ def gcal_add(args, tasks_file):
 
     task = tasks[task_id]
 
-    if not task.get("dueAt"):
-        return f"Task (ID:{args.id}) has no dueAt set"
+    if not task.get("due_at"):
+        return f"Task (ID:{args.id}) has no due_at set"
 
     gcal.create_event_for_task(task)
     return f"Task (ID:{args.id}) exported to Google Calendar"
@@ -221,10 +223,10 @@ def gcal_add(args, tasks_file):
 
 def gcal_sync(tasks_file):
     tasks = load_file(tasks_file)
-    due_tasks = [t for t in tasks.values() if t.get("dueAt")]
+    due_tasks = [t for t in tasks.values() if t.get("due_at")]
 
     if not due_tasks:
-        return "No tasks with dueAt to sync"
+        return "No tasks with due_at to sync"
 
     for task in due_tasks:
         gcal.create_event_for_task(task)

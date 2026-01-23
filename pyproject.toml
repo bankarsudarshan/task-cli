@@ -12,11 +12,16 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = ["tabulate",
-  "google-api-python-client",
-  "google-auth-httplib2",
-  "google-auth-oauthlib",
+dependencies = [
+    "tabulate",
+    "google-api-python-client",
+    "google-auth-httplib2",
+    "google-auth-oauthlib",
+    "pydantic>=2.12.5",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
 
 [project.scripts]
 taskman = "taskman.cli:main"
