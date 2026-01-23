@@ -106,6 +106,7 @@ def main():
     )
     parser_delete.add_argument(
         "id",
+        type=int,
         help="ID of the task to delete",
     )
     parser_delete.set_defaults(func=task.delete)
@@ -278,9 +279,9 @@ def main():
     parser_gcal_sync.set_defaults(func=task.gcal_sync)
 
     args = parser.parse_args()
+    print(args)
 
     result = args.func(args, tasks_file)
-    print(result)
 
     # if args.l1_subparser == "mark-done":
     #     result = args.func(args, tasks_file, archived_file)
@@ -289,8 +290,7 @@ def main():
     # else:
     #     result = args.func(args, tasks_file)
 
-    # print(result)
-    print(args)
+    print(result)
 
 
 if __name__ == "__main__":

@@ -1,11 +1,12 @@
 from datetime import datetime
+from typing import Any
 
 from taskman import gcal
 from taskman.helpers import load_file, render_tasks_table, save_file
 from taskman.models import Metadata, Task, TasksFile
 
 
-def add(args, tasks_file):
+def add(args, tasks_file) -> str:
     new_task = Task(
         description=args.task,
         status=args.status,
@@ -24,69 +25,73 @@ def add(args, tasks_file):
     metadata.last_tid = tid
     metadata.n_tasks += 1
 
-    new_data = TasksFile(tasks=tasks, metadata=metadata)
-
-    save_file(new_data, tasks_file)
+    save_file(
+        TasksFile(tasks=tasks, metadata=metadata),
+        tasks_file,
+    )
     return f"Task added (ID:{tid})"
 
 
-def update(args, tasks_file):
-    tasks = load_file(tasks_file)
-    if len(tasks) == 0:
-        print(f"No task with (ID:{args.id})")
-        return None
+def update(args, tasks_file) -> str:
+    tasks, md = load_file(tasks_file)
+    tid_s = [task.id for task in tasks]
+    tid: int = args.id
+    print(tid, tid_s)
 
-    task_id = str(args.id)
-    if task_id not in tasks:
-        print(f"No task with (ID:{args.id})")
-        return None
+    if len(tid_s) == 0 or tid not in tid_s:
+        return f"No task with (ID:{tid})"
 
-    task = tasks[task_id]
-    changed = False
-
-    if args.description is not None:
-        task["description"] = args.description
-        changed = True
-
-    if args.priority is not None:
-        task["priority"] = args.priority
-        changed = True
-
-    if args.status is not None:
-        task["status"] = args.status
-        changed = True
-
-    if args.due is not None:
-        task["due_at"] = args.due
-        changed = True
-
-    if not changed:
+    if not any([args.description, args.priority, args.status, args.due]):
         return f"No fields to update for (ID:{args.id})"
 
-    task["updated_at"] = datetime.now(tz="Asia/Kolkata").strftime("%Y-%m-%d %H:%M")
+    updates: dict[str, Any] = {}
+    if args.description is not None:
+        updates["description"] = args.description
+    if args.priority is not None:
+        updates["priority"] = args.priority.upper()
+    if args.status is not None:
+        updates["status"] = args.status.upper()
+    if args.due is not None:
+        updates["due_at"] = datetime.strptime(args.due, "%Y-%m-%d %H:%M")  # noqa: DTZ007
+    updates["updated_at"] = datetime.now()  # noqa: DTZ005
 
-    save_file(tasks, tasks_file)
-    return f"Task updated (ID:{task_id})"
+    task = tasks[tid_s.index(tid)]
+    tasks[tid_s.index(tid)] = task.model_copy(update=updates)
+
+    save_file(
+        TasksFile(tasks=tasks, metadata=md),
+        tasks_file,
+    )
+    return f"Task updated (ID:{tid})"
 
 
-def delete(args, tasks_file):
-    tasks = load_file(tasks_file)
-    tid = args.tid
-    if tid not in tasks:
-        print(f"No task with (ID:{tid})")
-        return None
-    del tasks[tid]
-    save_file(tasks, tasks_file)
+def delete(args, tasks_file) -> str:
+    tasks, metadata = load_file(tasks_file)
+    tid_s = [task.id for task in tasks]
+    tid: int = args.id
+
+    if tid not in tid_s:
+        return f"No task with (ID:{tid})"
+
+    del tasks[tid_s.index(tid)]
+
+    if metadata.last_tid == tid:
+        metadata.last_tid -= 1
+    metadata.n_tasks -= 1
+
+    save_file(
+        TasksFile(tasks=tasks, metadata=metadata),
+        tasks_file,
+    )
     return f"Task deleted (ID:{tid})"
 
 
-def list_tasks(args, tasks_file):
+def list_tasks(args, tasks_file) -> str:
     tasks, _ = load_file(tasks_file)
     if len(tasks) == 0:
-        print("No tasks added")
-        return None
+        return "No tasks added"
 
-    tasks_type = args.tasks_type
+    task_filters = [task_type.upper() for task_type in args.tasks_type]
     priority_filter = args.priority
     sort_by = args.sort_by
 
@@ -96,10 +101,11 @@ def list_tasks(args, tasks_file):
         task = task_model.model_dump()
 
         # filter by status
-        if tasks_type != "all" and task.get("status") != tasks_type:
-            continue
+        for task_type in task_filters:
+            if task_type != "all" and task.get("status") != task_type:
+                continue
 
-        # filter by priority if requested
+        # filter by prioprintrity if requested
         if priority_filter is not None and task["priority"] != priority_filter:
             continue
 
@@ -107,12 +113,8 @@ def list_tasks(args, tasks_file):
 
     if not filtered:
         if priority_filter is not None:
-            print(
-                f"No tasks with status '{tasks_type}' and priority '{priority_filter}'",
-            )
-        else:
-            print(f"No tasks with status '{tasks_type}'")
-        return None
+            return f"No tasks with status '{task_filters}' and priority '{priority_filter}'"
+        return f"No tasks with status '{task_filters}'"
 
     # sorting
     order = args.order

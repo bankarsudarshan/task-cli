@@ -1,6 +1,6 @@
-from datetime import datetime
 from pathlib import Path
 
+from pydantic import ValidationError
 from tabulate import tabulate
 
 from taskman.models import Metadata, Task, TasksFile
@@ -13,8 +13,7 @@ def load_file(filename: str) -> tuple[list[Task], Metadata]:
         with path.open("r", encoding="utf-8") as f:
             json_str = f.read()
         tasks_data: TasksFile = TasksFile.model_validate_json(json_str)
-    except Exception as exc:
-        print(f"exception raised - {exc}")
+    except (FileNotFoundError, ValidationError):
         return ([], Metadata(last_tid=0, n_tasks=0))
     else:
         return tasks_data.tasks, tasks_data.metadata
@@ -27,7 +26,7 @@ def save_file(tasks_data: TasksFile, filename: str):
         json_str = tasks_data.model_dump_json(indent=2)
         with path.open("w", encoding="utf-8") as f:
             f.write(json_str)
-    except Exception as exc:
+    except FileNotFoundError as exc:
         print(f"exception raised - {exc}")
 
 
