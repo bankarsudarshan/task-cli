@@ -1,7 +1,6 @@
-from pathlib import Path
 from datetime import datetime, timedelta
-
-import os
+from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -28,8 +27,8 @@ def get_calendar_service():
         else:
             if not CREDENTIALS_FILE.exists():
                 raise FileNotFoundError(
-                    f"Google API credentials not found at {CREDENTIALS_FILE}.\n"
-                    f"Place your credentials.json there (see README for setup)."
+                    "Google API credentials not found at {CREDENTIALS_FILE}.\n"
+                    "Place your credentials.json there (see README for setup).",
                 )
 
             flow = InstalledAppFlow.from_client_secrets_file(
@@ -50,12 +49,13 @@ def create_event_for_task(task, timezone="Asia/Kolkata"):
         raise ValueError("Task has no dueAt field")
 
     try:
-        start = datetime.strptime(task["dueAt"], "%Y-%m-%d %H:%M")
-    except ValueError:
-        raise ValueError(
-            f"Invalid dueAt format for task ID {task['id']}: {task['dueAt']}. "
-            "Expected YYYY-MM-DD HH:MM."
+        start = datetime.strptime(task["dueAt"], "%Y-%m-%d %H:%M").replace(
+            tzinfo=ZoneInfo("Asia/Kolkata"),
         )
+
+    except ValueError as err:
+        message = f"Invalid dueAt format for task ID {task['id']}: {task['dueAt']}. Expected YYYY-MM-DD HH:MM."
+        raise ValueError(message) from err
 
     end = start + timedelta(hours=1)
 

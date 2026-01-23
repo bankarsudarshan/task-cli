@@ -1,45 +1,43 @@
-import json
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from taskman import gcal
-from taskman.helpers import load_file, save_file, render_tasks_table
+from taskman.helpers import load_file, render_tasks_table, save_file
 
 
 def add(args, tasks_file):
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    now = datetime.now(tz=ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M")
 
     new_task = {
         "id": -1,
         "description": args.task,
-        "status": args.status,  
+        "status": args.status,
         "priority": args.priority,
         "createdAt": now,
         "updatedAt": now,
         "dueAt": args.due,
     }
     tasks = load_file(tasks_file)
-    id = -1
-    if len(tasks) == 0:
-        id = 1
-    else:
-        id = max(int(id) for id in tasks.keys()) + 1
+    tid = -1
+    tid = 1 if len(tasks) == 0 else max(int(tid) for tid in tasks) + 1
 
-    new_task["id"] = id
-    tasks[id] = new_task
+    new_task["id"] = tid
+    tasks[tid] = new_task
     save_file(tasks, tasks_file)
-    return f"Task added (ID:{id})"
+    return f"Task added (ID:{tid})"
+
 
 def update(args, tasks_file):
     tasks = load_file(tasks_file)
     if len(tasks) == 0:
         print(f"No task with (ID:{args.id})")
-        return
+        return None
 
     task_id = str(args.id)
     if task_id not in tasks:
         print(f"No task with (ID:{args.id})")
-        return
-        
+        return None
+
     task = tasks[task_id]
     changed = False
 
@@ -62,27 +60,28 @@ def update(args, tasks_file):
     if not changed:
         return f"No fields to update for (ID:{args.id})"
 
-    task["updatedAt"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    task["updatedAt"] = datetime.now(tz="Asia/Kolkata").strftime("%Y-%m-%d %H:%M")
 
     save_file(tasks, tasks_file)
     return f"Task updated (ID:{task_id})"
 
+
 def delete(args, tasks_file):
     tasks = load_file(tasks_file)
-    id = args.id
-    if id not in tasks:
-        print(f"No task with (ID:{id})")
-        return
-    else:
-        del tasks[id]
+    tid = args.tid
+    if tid not in tasks:
+        print(f"No task with (ID:{tid})")
+        return None
+    del tasks[tid]
     save_file(tasks, tasks_file)
-    return f"Task deleted (ID:{id})"
+    return f"Task deleted (ID:{tid})"
+
 
 def list_tasks(args, tasks_file):
     tasks = load_file(tasks_file)
     if len(tasks) == 0:
         print("No tasks added")
-        return
+        return None
 
     tasks_type = args.tasks_type
     priority_filter = args.priority
@@ -90,11 +89,11 @@ def list_tasks(args, tasks_file):
 
     filtered = []
 
-    for task_id, task in tasks.items():
+    for task in tasks.values():
         # filter by status
         if tasks_type != "all" and task.get("status") != tasks_type:
             continue
-        
+
         # filter by priority if requested
         if priority_filter is not None and task["priority"] != priority_filter:
             continue
@@ -103,17 +102,19 @@ def list_tasks(args, tasks_file):
         display_task = task.copy()
         display_task["dueAt"] = task.get("dueAt") or "No due date"
         filtered.append(display_task)
-    
+
     if not filtered:
         if priority_filter is not None:
-            print(f"No tasks with status '{tasks_type}' and priority '{priority_filter}'")
+            print(
+                f"No tasks with status '{tasks_type}' and priority '{priority_filter}'",
+            )
         else:
             print(f"No tasks with status '{tasks_type}'")
-        return
+        return None
 
     # sorting
     order = args.order
-    reverse = (order == "desc")
+    reverse = order == "desc"
 
     if sort_by == "priority":
         priority_order = {"high": 0, "medium": 1, "low": 2}
@@ -135,50 +136,52 @@ def list_tasks(args, tasks_file):
 
     return render_tasks_table(filtered)
 
+
 def mark_done(args, tasks_file, archived_file):
     tasks = load_file(tasks_file)
-    id = args.id
-    if len(tasks) == 0 or id not in tasks:
-        print(f"No task with (ID:{id})")
-        return
-    task = tasks[id]
-    del tasks[id]
+    tid = args.tid
+    if len(tasks) == 0 or tid not in tasks:
+        print(f"No task with (ID:{tid})")
+        return None
+    task = tasks[tid]
+    del tasks[tid]
     save_file(tasks, tasks_file)
     archived = load_file(archived_file)
-    archived[id] = task
+    archived[tid] = task
     save_file(archived, archived_file)
 
-    return f"Task marked as done (ID:{id})"
+    return f"Task marked as done (ID:{tid})"
+
 
 def mark_in_progress(args, tasks_file):
     tasks = load_file(tasks_file)
-    id = args.id
-    if len(tasks) == 0 or id not in tasks:
-        print(f"No task with (ID:{id})")
-        return
-    else:
-        tasks[id]['status'] = "in-progress"
+    tid = args.tid
+    if len(tasks) == 0 or tid not in tasks:
+        print(f"No task with (ID:{tid})")
+        return None
+    tasks[tid]["status"] = "in-progress"
     save_file(tasks, tasks_file)
-    return f"Task marked as in-progress (ID:{id})"
+    return f"Task marked as in-progress (ID:{tid})"
+
 
 def clear_tasks(args, tasks_file):
     tasks = load_file(tasks_file)
     if len(tasks) == 0:
-        return f"There are no tasks added"
+        return "There are no tasks added"
     tasks_type = args.tasks_type
     new_tasks = {}
     result = f"Cleared tasks marked {tasks_type}"
     if tasks_type != "all":
-        for id, task in tasks.items():
-            if task["status"] != tasks_type:
-                new_tasks[id] = task
+        new_tasks = {
+            tid: task for tid, task in tasks.items() if task["status"] != tasks_type
+        }
     else:
         new_tasks = {}
-        result = f"Cleared all tasks"
-    
-    with open(tasks_file, 'w', encoding='utf-8') as f:
-        json.dump(new_tasks, f, indent='\t') # json.dumps() outputs a nice formated string
+        result = "Cleared all tasks"
+
+    save_file(new_tasks, tasks_file)
     return result
+
 
 def search_tasks(args, tasks_file):
     tasks = load_file(tasks_file)
@@ -188,7 +191,7 @@ def search_tasks(args, tasks_file):
     keyword = args.keyword.lower()
     matches = []
 
-    for task_id, task in tasks.items():
+    for task in tasks.values():
         if keyword in task["description"].lower():
             display_task = task.copy()
             display_task["dueAt"] = task.get("dueAt") or "No due date"
@@ -198,6 +201,7 @@ def search_tasks(args, tasks_file):
         return f"No tasks found containing: {args.keyword}"
 
     return render_tasks_table(matches)
+
 
 def gcal_add(args, tasks_file):
     tasks = load_file(tasks_file)
@@ -215,7 +219,7 @@ def gcal_add(args, tasks_file):
     return f"Task (ID:{args.id}) exported to Google Calendar"
 
 
-def gcal_sync(args, tasks_file):
+def gcal_sync(tasks_file):
     tasks = load_file(tasks_file)
     due_tasks = [t for t in tasks.values() if t.get("dueAt")]
 

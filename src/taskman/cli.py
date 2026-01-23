@@ -1,13 +1,13 @@
-import os
 from argparse import ArgumentParser
 from pathlib import Path
 
 from . import task
 
-taskman_dir = Path('~/taskman').expanduser().resolve()
-tasks_file = os.path.join(taskman_dir, "tasks.json")
-archived_file = os.path.join(taskman_dir, "archived.json")
-os.makedirs(taskman_dir, exist_ok=True)
+taskman_dir = Path("~/taskman").expanduser().resolve()
+tasks_file = taskman_dir / "tasks.json"
+archived_file = taskman_dir / "archived.json"
+
+taskman_dir.mkdir(parents=True, exist_ok=True)
 
 
 def main():
@@ -35,7 +35,8 @@ def main():
         help="Task description (wrap in quotes if it contains spaces)",
     )
     parser_add.add_argument(
-        "-p", "--priority",
+        "-p",
+        "--priority",
         type=str,
         choices=["low", "medium", "high"],
         default="medium",
@@ -43,7 +44,8 @@ def main():
         help="Priority of the task (default: medium)",
     )
     parser_add.add_argument(
-        "-s", "--status",
+        "-s",
+        "--status",
         type=str,
         choices=["todo", "in-progress", "done"],
         default="todo",
@@ -70,18 +72,21 @@ def main():
         help="ID of the task to update",
     )
     parser_update.add_argument(
-        "-d", "--description",
+        "-d",
+        "--description",
         type=str,
         help="New task description",
     )
     parser_update.add_argument(
-        "-p", "--priority",
+        "-p",
+        "--priority",
         type=str,
         choices=["low", "medium", "high"],
         help="Update task priority",
     )
     parser_update.add_argument(
-        "-s", "--status",
+        "-s",
+        "--status",
         type=str,
         choices=["todo", "in-progress", "done"],
         help="Update task status",
@@ -120,20 +125,23 @@ def main():
         help="Filter tasks by status (default: all)",
     )
     parser_list.add_argument(
-        "-p", "--priority",
+        "-p",
+        "--priority",
         type=str,
         choices=["low", "medium", "high"],
         help="Filter tasks by priority",
     )
     parser_list.add_argument(
-        "-sb", "--sort-by",
+        "-sb",
+        "--sort-by",
         type=str,
         choices=["id", "createdAt", "updatedAt", "priority", "status"],
         default="id",
         help="Sort tasks by a specific field (default: id)",
     )
     parser_list.add_argument(
-        "-o", "--order",
+        "-o",
+        "--order",
         type=str,
         choices=["asc", "desc"],
         default="asc",
@@ -143,13 +151,13 @@ def main():
 
     list_subparsers = parser_list.add_subparsers(
         dest="l2_subparser_list",
-        description="More granular commands on top of list command"
+        description="More granular commands on top of list command",
     )
 
     parser_list_archived = list_subparsers.add_parser(
         "archived",
         help="List done tasks",
-        description="List done / archived tasks"
+        description="List done / archived tasks",
     )
     parser_list_archived.add_argument(
         "tasks_type",
@@ -160,28 +168,30 @@ def main():
         help="Filter tasks by status (default: all)",
     )
     parser_list_archived.add_argument(
-        "-p", "--priority",
+        "-p",
+        "--priority",
         type=str,
         choices=["low", "medium", "high"],
         help="Filter tasks by priority",
     )
     parser_list_archived.add_argument(
-        "-sb", "--sort-by",
+        "-sb",
+        "--sort-by",
         type=str,
         choices=["id", "createdAt", "updatedAt", "priority", "status"],
         default="id",
         help="Sort tasks by a specific field (default: id)",
     )
     parser_list_archived.add_argument(
-        "-o", "--order",
+        "-o",
+        "--order",
         type=str,
         choices=["asc", "desc"],
         default="asc",
         help="Sort order (default: asc)",
     )
-    
-    parser_list_archived.set_defaults(func=task.list_tasks)
 
+    parser_list_archived.set_defaults(func=task.list_tasks)
 
     # ---------------- MARK DONE ----------------
     parser_mark_done = subparsers.add_parser(
@@ -269,9 +279,9 @@ def main():
 
     args = parser.parse_args()
 
-    if args.l1_subparser == 'mark-done':
+    if args.l1_subparser == "mark-done":
         result = args.func(args, tasks_file, archived_file)
-    elif args.l1_subparser == 'list' and args.l2_subparser_list == 'archived':
+    elif args.l1_subparser == "list" and args.l2_subparser_list == "archived":
         result = args.func(args, archived_file)
     else:
         result = args.func(args, tasks_file)
