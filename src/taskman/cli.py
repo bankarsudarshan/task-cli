@@ -194,6 +194,7 @@ def main():
 
     # parser_list_archived.set_defaults(func=task.list_tasks)
 
+    """
     # ---------------- MARK DONE ----------------
     parser_mark_done = subparsers.add_parser(
         "mark-done",
@@ -205,6 +206,7 @@ def main():
         help="ID of the task",
     )
     parser_mark_done.set_defaults(func=task.mark_done)
+    """
 
     # ---------------- MARK IN PROGRESS ----------------
     parser_mark_in_progress = subparsers.add_parser(
@@ -214,6 +216,7 @@ def main():
     )
     parser_mark_in_progress.add_argument(
         "id",
+        type=int,
         help="ID of the task",
     )
     parser_mark_in_progress.set_defaults(func=task.mark_in_progress)
@@ -225,12 +228,10 @@ def main():
         description="Delete tasks by status or clear all tasks.",
     )
     parser_clear.add_argument(
-        "tasks_type",
+        "tasks_status",
         type=str,
         choices=["in-progress", "todo", "done", "all"],
-        default="all",
-        nargs="?",
-        help="Type of tasks to clear (default: all)",
+        help="Type of tasks to clear",
     )
     parser_clear.set_defaults(func=task.clear_tasks)
 
@@ -247,6 +248,7 @@ def main():
     )
     parser_search.set_defaults(func=task.search_tasks)
 
+    """
     # ---------------- GOOGLE CALENDAR ----------------
     parser_gcal = subparsers.add_parser(
         "gcal",
@@ -277,9 +279,9 @@ def main():
         description="Export all tasks that have a due date to Google Calendar.",
     )
     parser_gcal_sync.set_defaults(func=task.gcal_sync)
+    """
 
     args = parser.parse_args()
-    print(args)
 
     result = args.func(args, tasks_file)
 

@@ -3,7 +3,7 @@ from typing import Any
 
 from taskman import gcal
 from taskman.helpers import load_file, render_tasks_table, save_file
-from taskman.models import Metadata, Task, TasksFile
+from taskman.models import Metadata, Task, TaskPriority, TasksFile, TaskStatus
 
 
 def add(args, tasks_file) -> str:
@@ -33,10 +33,9 @@ def add(args, tasks_file) -> str:
 
 
 def update(args, tasks_file) -> str:
-    tasks, md = load_file(tasks_file)
+    tasks, _ = load_file(tasks_file)
     tid_s = [task.id for task in tasks]
     tid: int = args.id
-    print(tid, tid_s)
 
     if len(tid_s) == 0 or tid not in tid_s:
         return f"No task with (ID:{tid})"
@@ -48,9 +47,9 @@ def update(args, tasks_file) -> str:
     if args.description is not None:
         updates["description"] = args.description
     if args.priority is not None:
-        updates["priority"] = args.priority.upper()
+        updates["priority"] = TaskPriority(args.priority.lower())
     if args.status is not None:
-        updates["status"] = args.status.upper()
+        updates["status"] = TaskStatus(args.status.lower())
     if args.due is not None:
         updates["due_at"] = datetime.strptime(args.due, "%Y-%m-%d %H:%M")  # noqa: DTZ007
     updates["updated_at"] = datetime.now()  # noqa: DTZ005
@@ -59,7 +58,7 @@ def update(args, tasks_file) -> str:
     tasks[tid_s.index(tid)] = task.model_copy(update=updates)
 
     save_file(
-        TasksFile(tasks=tasks, metadata=md),
+        TasksFile(tasks=tasks, metadata=_),
         tasks_file,
     )
     return f"Task updated (ID:{tid})"
@@ -141,65 +140,83 @@ def list_tasks(args, tasks_file) -> str:
     return render_tasks_table(filtered)
 
 
+"""
 def mark_done(args, tasks_file, archived_file):
-    tasks = load_file(tasks_file)
+    tasks, _ = load_file(tasks_file)
+    tid_s = [task.id for task in tasks]
     tid = args.tid
-    if len(tasks) == 0 or tid not in tasks:
-        print(f"No task with (ID:{tid})")
-        return None
-    task = tasks[tid]
-    del tasks[tid]
-    save_file(tasks, tasks_file)
-    archived = load_file(archived_file)
-    archived[tid] = task
+
+    if len(tasks) == 0 or tid not in tid_s:
+        return f"No task with (ID:{tid})"
+
+    delete_idx = tid_s.index(tid)
+    task = tasks[delete_idx]
+    del tasks[delete_idx]
+    save_file(TasksFile(tasks=tasks, metadata=_), tasks_file)
+
+    archived_tasks, metadata = load_file(archived_file)
+    archived_tid_s = [task.id for task in archived_tasks]
+    insert_idx = next(
+        (idx for idx, archived_tid in enumerate(archived_tid_s) if archived_tid >= tid),
+        metadata.n_tasks,
+    )
+    archived_tasks.insert(insert_idx-1, task)
     save_file(archived, archived_file)
 
     return f"Task marked as done (ID:{tid})"
+"""
 
 
 def mark_in_progress(args, tasks_file):
-    tasks = load_file(tasks_file)
-    tid = args.tid
-    if len(tasks) == 0 or tid not in tasks:
-        print(f"No task with (ID:{tid})")
-        return None
-    tasks[tid]["status"] = "in-progress"
-    save_file(tasks, tasks_file)
+    tasks, _ = load_file(tasks_file)
+    tid_s = [task.id for task in tasks]
+    tid = args.id
+
+    if len(tid_s) == 0 or tid not in tid_s:
+        return f"No task with (ID:{tid})"
+
+    tasks[tid_s.index(tid)].status = TaskStatus("in-progress")
+    tasks[tid_s.index(tid)].updated_at = datetime.now()  # noqa: DTZ005
+
+    save_file(
+        TasksFile(tasks=tasks, metadata=_),
+        tasks_file,
+    )
     return f"Task marked as in-progress (ID:{tid})"
 
 
 def clear_tasks(args, tasks_file):
-    tasks = load_file(tasks_file)
+    tasks, _ = load_file(tasks_file)
+    tasks_status = args.tasks_status
+
     if len(tasks) == 0:
         return "There are no tasks added"
-    tasks_type = args.tasks_type
-    new_tasks = {}
-    result = f"Cleared tasks marked {tasks_type}"
-    if tasks_type != "all":
-        new_tasks = {
-            tid: task for tid, task in tasks.items() if task["status"] != tasks_type
-        }
-    else:
-        new_tasks = {}
-        result = "Cleared all tasks"
 
-    save_file(new_tasks, tasks_file)
+    new_tasks = []
+    if tasks_status == "all":
+        result = "Cleared all tasks"
+    else:
+        new_tasks = [task for task in tasks if task.status != tasks_status]
+        result = f"Cleared tasks marked {tasks_status}"
+
+    save_file(
+        TasksFile(tasks=new_tasks, metadata=_),
+        tasks_file,
+    )
     return result
 
 
 def search_tasks(args, tasks_file):
-    tasks = load_file(tasks_file)
+    tasks, _ = load_file(tasks_file)
+    keyword = args.keyword.lower()
+
     if len(tasks) == 0:
         return "No tasks added"
 
-    keyword = args.keyword.lower()
     matches = []
-
-    for task in tasks.values():
-        if keyword in task["description"].lower():
-            display_task = task.copy()
-            display_task["due_at"] = task.get("due_at") or "No due date"
-            matches.append(display_task)
+    for task in tasks:
+        if keyword in task.description.lower():
+            matches.append(task)
 
     if not matches:
         return f"No tasks found containing: {args.keyword}"
