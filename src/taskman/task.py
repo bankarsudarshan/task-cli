@@ -90,7 +90,7 @@ def list_tasks(args, tasks_file) -> str:
     if len(tasks) == 0:
         return "No tasks added"
 
-    task_filters = [task_type.upper() for task_type in args.tasks_type]
+    task_filter = args.tasks_type.lower()
     priority_filter = args.priority
     sort_by = args.sort_by
 
@@ -100,20 +100,21 @@ def list_tasks(args, tasks_file) -> str:
         task = task_model.model_dump()
 
         # filter by status
-        for task_type in task_filters:
-            if task_type != "all" and task.get("status") != task_type:
-                continue
+        if task_filter != "all" and task_filter != task["status"]:
+            continue
 
-        # filter by prioprintrity if requested
-        if priority_filter is not None and task["priority"] != priority_filter:
+        # filter by priority if requested
+        if priority_filter is not None and priority_filter != task["priority"]:
             continue
 
         filtered.append(task)
 
     if not filtered:
         if priority_filter is not None:
-            return f"No tasks with status '{task_filters}' and priority '{priority_filter}'"
-        return f"No tasks with status '{task_filters}'"
+            return (
+                f"No tasks with status '{task_filter}' and priority '{priority_filter}'"
+            )
+        return f"No tasks with status '{task_filter}'"
 
     # sorting
     order = args.order
