@@ -27,7 +27,7 @@ def register(subparser, service: CLIService):
         "-sb",
         "--sort-by",
         type=str,
-        choices=["id", "created_at", "updated_at", "priority", "status"],
+        choices=["id", "created_at", "updated_at", "due_at", "priority", "status"],
         default="id",
         help="Sort tasks by a specific field (default: id)",
     )

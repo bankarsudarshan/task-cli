@@ -16,11 +16,11 @@ class CLIService:
             priority=priority,
             due_at=due_at,
         )
-        return f"Task added (ID:{tid})"
+        return tid
 
     def update(
         self,
-        tid,
+        tid: int,
         description: str,
         priority: str,
         status: str,
@@ -74,23 +74,30 @@ class CLIService:
 
         if len(filtered) != 0:
             # sorting
-            is_reverse_sort = filters["order"] == "desc"
-            if filters["sort_by"] == "priority":
+            field: str = filters["sort_by"]
+            reverse: bool = filters["order"] == "desc"
+            if field == "priority":
                 priority_order = {"high": 0, "medium": 1, "low": 2}
                 filtered.sort(
                     key=lambda t: priority_order.get(t.get("priority"), 3),
-                    reverse=is_reverse_sort,
+                    reverse=reverse,
                 )
-            elif filters["sort_by"] == "status":
+            elif field == "status":
                 status_order = {"todo": 0, "in-progress": 1, "done": 2}
                 filtered.sort(
                     key=lambda t: status_order.get(t.get("status"), 3),
-                    reverse=is_reverse_sort,
+                    reverse=reverse,
                 )
+            elif field in ("updated_at", "due_at"):
+                tasks_with_field = [task for task in filtered if task.get(field)]
+                tasks_with_field.sort(key=lambda t: t.get(field), reverse=reverse)
+                tasks_without_field = [task for task in filtered if not task.get(field)]
+                filtered = tasks_with_field + tasks_without_field
+
             else:
                 filtered.sort(
                     key=lambda t: t.get(filters["sort_by"], ""),
-                    reverse=is_reverse_sort,
+                    reverse=reverse,
                 )
 
         return filtered
