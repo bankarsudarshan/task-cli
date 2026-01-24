@@ -1,15 +1,15 @@
-def register(subparser, add_task):
-    parser_add = subparser.add_parser(
+def register(subparser, service):
+    parser = subparser.add_parser(
         "add",
         help="Add a new task",
         description="Create a new task with description, priority, status, and optional due date.",
     )
-    parser_add.add_argument(
+    parser.add_argument(
         "task",
         type=str,
         help="Task description (wrap in quotes if it contains spaces)",
     )
-    parser_add.add_argument(
+    parser.add_argument(
         "-p",
         "--priority",
         type=str,
@@ -18,7 +18,7 @@ def register(subparser, add_task):
         nargs="?",
         help="Priority of the task (default: medium)",
     )
-    parser_add.add_argument(
+    parser.add_argument(
         "-s",
         "--status",
         type=str,
@@ -27,10 +27,22 @@ def register(subparser, add_task):
         nargs="?",
         help="Initial status of the task (default: todo)",
     )
-    parser_add.add_argument(
+    parser.add_argument(
         "--due",
         type=str,
         default=None,
         help="Due date/time in format YYYY-MM-DD HH:MM",
     )
-    parser_add.set_defaults(func=add_task)
+
+    parser.set_defaults(func=lambda args: run(args, service))
+
+
+def run(args, service):
+    # The command's job is just to extract args and call the service
+    tid = service.add(
+        description=args.task,
+        priority=args.priority,
+        status=args.status,
+        due_at=args.due,
+    )
+    return f"Success: Task added with ID {tid}"
