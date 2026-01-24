@@ -1,4 +1,7 @@
-def register(subparser, update_task):
+from taskman.core.services import CLIService
+
+
+def register(subparser, service: CLIService):
     parser_update = subparser.add_parser(
         "update",
         help="Update an existing task",
@@ -34,4 +37,17 @@ def register(subparser, update_task):
         type=str,
         help="Update due date/time (YYYY-MM-DD HH:MM)",
     )
-    parser_update.set_defaults(func=update_task)
+    parser_update.set_defaults(func=lambda args: run(args, service))
+
+
+def run(args, service: CLIService):
+    tid = service.update(
+        args.id,
+        args.description,
+        args.priority,
+        args.status,
+        args.due,
+    )
+    if not tid:
+        return "Task not updated"
+    return f"Task updated (ID:{tid})"
