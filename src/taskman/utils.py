@@ -1,30 +1,18 @@
-from pathlib import Path
+from enum import Enum
 
-from pydantic import ValidationError
 from tabulate import tabulate
 
-from taskman.models import Metadata, Task, TasksFile
+
+class TaskStatus(str, Enum):
+    TODO = "todo"
+    IN_PROGRESS = "in-progress"
+    DONE = "done"
 
 
-def load_file(filename: str) -> tuple[list[Task], Metadata]:
-    path: Path = Path(filename)
-
-    try:
-        with path.open("r", encoding="utf-8") as f:
-            json_str = f.read()
-        tasks_data: TasksFile = TasksFile.model_validate_json(json_str)
-    except (FileNotFoundError, ValidationError) as exc:
-        print(exc)
-        return ([], Metadata(last_tid=0, n_tasks=0))
-    else:
-        return tasks_data.tasks, tasks_data.metadata
-
-
-def save_file(tasks_data: TasksFile, filename: str):
-    path = Path(filename)
-    json_str = tasks_data.model_dump_json(indent=2)
-    with path.open("w", encoding="utf-8") as f:
-        f.write(json_str)
+class TaskPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
 
 
 def render_tasks_table(rows):
