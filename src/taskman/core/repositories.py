@@ -53,16 +53,17 @@ class FileRepository:
 
     def add_task(
         self,
-        description: str,
-        status: TaskStatus,
-        priority: TaskPriority,
-        due_at: datetime,
-        task: Task = None,
+        description: str | None = None,
+        status: TaskStatus | None = None,
+        priority: TaskPriority | None = None,
+        due_at: datetime | None = None,
+        task: Task | None = None,
     ) -> int:
         task_data = [description, status, priority, due_at]
         if task and any(task_data):
             raise ValueError(
-                "task bhi de diya, aur naya task banane ke liye information bhi. dono me se ek hi de sakte ho",
+                "task bhi de diya, aur naya task banane ke liye information bhi. \
+                dono me se ek hi de sakte ho",
             )
         if task:
             return self._add_task_in_file(task)
@@ -86,10 +87,10 @@ class FileRepository:
     def get_all_tasks(self) -> list[Task]:
         return copy.deepcopy(self.tasks)
 
-    def update_task_by_tid(self, tid, update_data) -> int | None:
+    def update_task(self, tid, update_data) -> int | None:
         tidx = self.__get_tidx(tid)
 
-        if not tidx:
+        if tidx is None:
             return None
 
         task = self.tasks[tidx]

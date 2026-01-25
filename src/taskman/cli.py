@@ -5,6 +5,7 @@ from taskman.commands import (
     delete_cmd,
     list_cmd,
     mark_cmd,
+    update_cmd,
 )
 from taskman.core.repositories import FileRepository
 from taskman.core.services import CLIService
@@ -27,6 +28,7 @@ def main():
 
     add_cmd.register(subparser, service)
     list_cmd.register(subparser, service)
+    update_cmd.register(subparser, service)
     delete_cmd.register(subparser, service)
     mark_cmd.register(subparser, service)
 

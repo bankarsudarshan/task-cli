@@ -103,17 +103,18 @@ class CLIService:
         return filtered
 
     def __mark_done(self, tid: int) -> int | None:
-        task = self.repo.get_by_tid(tid)
+        task = self.repo.get_task_by_tid(tid)
+        print(f"task to be marked retrieved - {task}")
         if not task:
             return None
 
-        self.repo.delete_task(tid)
-
+        self.repo.delete_task_by_tid(tid)
         task.status = TaskStatus.DONE
-        return self.archive_repo.add_task(task)
+        task.updated_at = datetime.now()  # noqa: DTZ005
+        return self.archive_repo.add_task(task=task)
 
     def __mark_in_progress(self, tid: int) -> int | None:
-        return self.repo.update_task_by_tid(tid, {"status": TaskStatus.IN_PROGRESS})
+        return self.repo.update_task(tid, {"status": TaskStatus.IN_PROGRESS})
 
     def mark(self, tid: int, status: str) -> int | None:
         if status == "done":

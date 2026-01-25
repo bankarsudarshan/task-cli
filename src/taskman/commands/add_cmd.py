@@ -45,4 +45,6 @@ def run(args, service):
         status=args.status,
         due_at=args.due,
     )
-    return f"Success: Task added with ID {tid}"
+    if not tid:
+        return "Could not add the task"
+    return f"Task added (ID:{tid})"
