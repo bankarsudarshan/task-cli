@@ -1,18 +1,16 @@
 import copy
 from datetime import datetime
-from pathlib import Path
 
 from pydantic import ValidationError
 
+from taskman.config import settings
 from taskman.core.models import Metadata, Task, TasksFile
 from taskman.utils import TaskPriority, TaskStatus
-
-taskman_dir = Path("~/taskman-test").expanduser().resolve()
 
 
 class FileRepository:
     def __init__(self, filename: str):
-        self.path = taskman_dir / filename
+        self.path = settings.database_path / filename
         self.tasks: list[Task] = []
         self.metadata: Metadata = Metadata(last_tid=0, n_tasks=0)
         self.__load_all()  # Load on init

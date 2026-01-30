@@ -7,13 +7,14 @@ from taskman.commands import (
     mark_cmd,
     update_cmd,
 )
+from taskman.config import settings
 from taskman.core.repositories import FileRepository
 from taskman.core.services import CLIService
 
 
 def main():
-    tasks_file = "tasks.json"
-    archives_file = "archived.json"
+    tasks_file = settings.tasks_filename
+    archives_file = settings.archives_filename
 
     repo = FileRepository(tasks_file)
     archive_repo = FileRepository(archives_file)
