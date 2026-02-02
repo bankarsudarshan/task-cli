@@ -99,8 +99,7 @@ class FileRepository:
 
     def delete_task_by_tid(self, tid) -> int | None:
         tidx = self.__get_tidx(tid)
-
-        if not tidx:
+        if tidx is None:
             return None
 
         del self.tasks[tidx]

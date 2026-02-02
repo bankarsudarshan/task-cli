@@ -44,8 +44,8 @@ class CLIService:
 
         return self.repo.update_task(tid, updates)
 
-    def delete(self, tid) -> str:
-        return self.repo.delete_task(tid)
+    def delete(self, tid: int) -> int | None:
+        return self.repo.delete_task_by_tid(tid)
 
     def get_tasks(self, filters: dict):
         tasks = self.repo.get_all_tasks()

@@ -1,4 +1,7 @@
-def register(subparser, delete_task):
+from taskman.core.services import CLIService
+
+
+def register(subparser, service: CLIService):
     parser_delete = subparser.add_parser(
         "delete",
         help="Delete a task",
@@ -9,19 +12,19 @@ def register(subparser, delete_task):
         type=int,
         help="ID of the task to delete",
     )
-    parser_delete.set_defaults(func=delete_task)
+    # parser_delete.add_argument(
+    #     "--tasks-type",
+    #     choices=["in-progress", "todo"],
+    #     help="Delete tasks by status",
+    # )
+    parser_delete.set_defaults(func=lambda args: run_delete(args, service))
 
 
-def register_clear(subparser, clear_tasks):
-    parser_clear = subparser.add_parser(
-        "clear",
-        help="Clear tasks",
-        description="Delete tasks by status or clear all tasks.",
+def run_delete(args, service: CLIService):
+    tid = service.delete(
+        tid=args.id,
+        # tasks_type=args.tasks_type,
     )
-    parser_clear.add_argument(
-        "tasks_status",
-        type=str,
-        choices=["in-progress", "todo", "done", "all"],
-        help="Type of tasks to clear",
-    )
-    parser_clear.set_defaults(func=clear_tasks)
+    if tid is None:
+        return "Could not delete the task"
+    return f"Task deleted (ID:{tid})"
