@@ -1,53 +1,55 @@
-from taskman.client import CLIClient
+from taskman.client import request
 from taskman.utils import render_tasks_table
 
 
-def register(subparser, service: CLIClient):
-    parser_list = subparser.add_parser(
+def register(subparser):
+    parser = subparser.add_parser(
         "list",
         help="List tasks",
-        description="List tasks filtered by status, priority, and sorting options.",
+        description="List tasks with filters and sorting.",
     )
-    parser_list.add_argument(
-        "tasks_type",
+    parser.add_argument(
+        "status",
         type=str,
         choices=["in-progress", "todo", "done", "all"],
         default="all",
         nargs="?",
         help="Filter tasks by status (default: all)",
     )
-    parser_list.add_argument(
-        "-p",
-        "--priority",
-        type=str,
-        choices=["low", "medium", "high"],
-        help="Filter tasks by priority",
-    )
-    parser_list.add_argument(
+    parser.add_argument(
         "-sb",
         "--sort-by",
         type=str,
-        choices=["id", "created_at", "updated_at", "due_at", "priority", "status"],
+        choices=["id", "created_at", "updated_at", "due_at", "status"],
         default="id",
-        help="Sort tasks by a specific field (default: id)",
     )
-    parser_list.add_argument(
+    parser.add_argument(
         "-o",
         "--order",
         type=str,
         choices=["asc", "desc"],
         default="asc",
-        help="Sort order (default: asc)",
     )
-    parser_list.set_defaults(func=lambda args: run(args, service))
+
+    parser.set_defaults(func=run)
 
 
-def run(args, service: CLIClient):
-    filters = {
-        "tasks_type": args.tasks_type,
-        "priority": args.priority,
-        "sort_by": args.sort_by,
-        "order": args.order,
-    }
-    tasks = service.get_tasks(filters)
+def run(args):
+    params = {}
+
+    if args.status != "all":
+        params["status"] = args.status
+
+    params["sort_by"] = args.sort_by
+    params["order"] = args.order
+
+    response = request(
+        "GET",
+        "/tasks/",
+        params=params,
+    )
+
+    data = response.json()
+    tasks = data.get("tasks", [])
+
     return render_tasks_table(tasks)

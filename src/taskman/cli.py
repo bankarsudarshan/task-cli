@@ -3,7 +3,7 @@ import argparse
 from taskman.commands import (
     add_cmd,
     # delete_cmd,
-    # list_cmd,
+    list_cmd,
     # mark_cmd,
     # update_cmd,
 )
@@ -17,7 +17,7 @@ def main():
     subparser = parser.add_subparsers(dest="command", help="Available commands")
 
     add_cmd.register(subparser)
-    # list_cmd.register(subparser)
+    list_cmd.register(subparser)
     # update_cmd.register(subparser)
     # delete_cmd.register(subparser)
     # mark_cmd.register(subparser)

@@ -1,54 +1,63 @@
-from enum import Enum
+from datetime import datetime
 
 from tabulate import tabulate
 
 
-class TaskStatus(str, Enum):
-    TODO = "todo"
-    IN_PROGRESS = "in-progress"
-    DONE = "done"
+def _format_datetime(value, empty_text=""):
+    if not value:
+        return empty_text
 
+    try:
+        if isinstance(value, datetime):
+            return value.strftime("%Y-%m-%d %H:%M")
 
-class TaskPriority(str, Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return dt.strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return str(value)
 
 
 def render_tasks_table(rows):
-    """Render a list of tasks as a formatted table."""
     if not rows:
-        return None
+        return "No tasks found."
 
-    date_fields = ["updated_at", "created_at", "due_at"]
+    formatted_rows = []
 
     for row in rows:
-        row["priority"] = row["priority"].name
-        row["status"] = row["status"].name
-        for date_field in date_fields:
-            if row[date_field]:
-                row[date_field] = row[date_field].strftime("%Y-%m-%d %H:%M")
-            else:
-                row[date_field] = "" if date_field == "updated_at" else "No due date"
+        formatted_rows.append(
+            {
+                "id": str(row.get("id", ""))[:8],
+                "description": row.get("description", ""),
+                "status": str(row.get("status", "")).lower(),
+                "priority": str(row.get("priority", "") or "-").lower(),
+                "created_at": _format_datetime(row.get("created_at")),
+                "updated_at": _format_datetime(row.get("updated_at")),
+                "due_at": _format_datetime(
+                    row.get("due_at") or row.get("due"),
+                    "No due date",
+                ),
+            },
+        )
 
-    headers = rows[0].keys()
-
-    # Description gets more width, others default
-    col_widths = [
-        40
-        if k == "description"
-        else 15
-        if k in ("created_at", "updated_at", "due_at")
-        else None
-        for k in headers
+    headers = [
+        "id",
+        "description",
+        "status",
+        "priority",
+        "created_at",
+        "updated_at",
+        "due_at",
     ]
 
-    # Left-align description, center everything else
-    col_align = ["left" if k == "description" else "center" for k in headers]
+    # Convert dict → list (avoids tabulate header issues completely)
+    table_data = [[row[h] for h in headers] for row in formatted_rows]
+
+    col_widths = [10, 40, 12, 12, 17, 17, 17]
+    col_align = ["center", "left", "center", "center", "center", "center", "center"]
 
     return tabulate(
-        rows,
-        headers="keys",
+        table_data,
+        headers=headers,
         tablefmt="rounded_grid",
         maxcolwidths=col_widths,
         colalign=col_align,
