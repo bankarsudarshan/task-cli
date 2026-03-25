@@ -1,7 +1,7 @@
-from taskman.core.services import CLIService
+from taskman.client import CLIClient
 
 
-def register(subparser, service: CLIService):
+def register(subparser, service: CLIClient):
     parser_update = subparser.add_parser(
         "update",
         help="Update an existing task",
@@ -40,7 +40,7 @@ def register(subparser, service: CLIService):
     parser_update.set_defaults(func=lambda args: run(args, service))
 
 
-def run(args, service: CLIService):
+def run(args, service: CLIClient):
     tid = service.update(
         args.id,
         args.description,

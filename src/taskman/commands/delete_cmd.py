@@ -1,7 +1,7 @@
-from taskman.core.services import CLIService
+from taskman.client import CLIClient
 
 
-def register(subparser, service: CLIService):
+def register(subparser, service: CLIClient):
     parser_delete = subparser.add_parser(
         "delete",
         help="Delete a task",
@@ -20,7 +20,7 @@ def register(subparser, service: CLIService):
     parser_delete.set_defaults(func=lambda args: run_delete(args, service))
 
 
-def run_delete(args, service: CLIService):
+def run_delete(args, service: CLIClient):
     tid = service.delete(
         tid=args.id,
         # tasks_type=args.tasks_type,

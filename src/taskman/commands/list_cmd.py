@@ -1,8 +1,8 @@
-from taskman.core.services import CLIService
+from taskman.client import CLIClient
 from taskman.utils import render_tasks_table
 
 
-def register(subparser, service: CLIService):
+def register(subparser, service: CLIClient):
     parser_list = subparser.add_parser(
         "list",
         help="List tasks",
@@ -42,7 +42,7 @@ def register(subparser, service: CLIService):
     parser_list.set_defaults(func=lambda args: run(args, service))
 
 
-def run(args, service: CLIService):
+def run(args, service: CLIClient):
     filters = {
         "tasks_type": args.tasks_type,
         "priority": args.priority,

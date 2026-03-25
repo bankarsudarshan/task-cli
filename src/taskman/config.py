@@ -1,20 +1,18 @@
+import json
 from pathlib import Path
 
-from pydantic_settings import BaseSettings
+CONFIG_PATH = Path.home() / ".taskman.json"
 
 
-class Settings(BaseSettings):
-    environment: str
-    file_store_location: Path = Path("~/taskman").expanduser()
-    tasks_filename: str = "tasks.json"
-    archives_filename: str = "archived.json"
-
-    @property
-    def database_path(self) -> Path:
-        path = self.file_store_location
-        if self.environment == "dev":
-            return path.with_name(f"{path.name}-test")
-        return path
+def save_token(token: str):
+    CONFIG_PATH.write_text(json.dumps({"token": token}))
 
 
-settings = Settings(environment="prod")
+def get_token():
+    if not CONFIG_PATH.exists():
+        return None
+    try:
+        data = json.loads(CONFIG_PATH.read_text())
+        return data.get("token")
+    except FileNotFoundError:
+        return "Please login first"
