@@ -29,9 +29,7 @@ def render_tasks_table(rows):
                 "id": str(row.get("id", ""))[:8],
                 "description": row.get("description", ""),
                 "status": str(row.get("status", "")).lower(),
-                "priority": str(row.get("priority", "") or "-").lower(),
                 "created_at": _format_datetime(row.get("created_at")),
-                "updated_at": _format_datetime(row.get("updated_at")),
                 "due_at": _format_datetime(
                     row.get("due_at") or row.get("due"),
                     "No due date",
@@ -43,9 +41,7 @@ def render_tasks_table(rows):
         "id",
         "description",
         "status",
-        "priority",
         "created_at",
-        "updated_at",
         "due_at",
     ]
 
