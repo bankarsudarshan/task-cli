@@ -8,7 +8,6 @@ BASE_URL = "http://localhost:8000/api/v1"
 
 
 def login_flow():
-    print("You'll need to login first (:")
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--username", help="Username/email")
 

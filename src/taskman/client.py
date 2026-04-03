@@ -31,6 +31,7 @@ def request(method: str, path: str, **kwargs):
     if response.status_code == HTTPStatus.UNAUTHORIZED:
         print("⚠️ Session expired. Please login again.\n")
         token = login_flow()
+        save_token(token)
         headers["Authorization"] = f"Bearer {token}"
 
         response = requests.request(
