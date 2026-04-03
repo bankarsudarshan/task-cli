@@ -1,53 +1,62 @@
-from taskman.client import CLIClient
+from taskman.client import request
 
 
-def register(subparser, service: CLIClient):
-    parser_update = subparser.add_parser(
+def register(subparser):
+    parser = subparser.add_parser(
         "update",
         help="Update an existing task",
-        description="Update task fields such as description, priority, status, or due date.",
+        description="Update task fields such as description, status, or due date.",
     )
-    parser_update.add_argument(
+    parser.add_argument(
         "id",
-        type=int,
+        type=str,
         help="ID of the task to update",
     )
-    parser_update.add_argument(
+    parser.add_argument(
         "-d",
         "--description",
         type=str,
         help="New task description",
     )
-    parser_update.add_argument(
-        "-p",
-        "--priority",
-        type=str,
-        choices=["low", "medium", "high"],
-        help="Update task priority",
-    )
-    parser_update.add_argument(
+    parser.add_argument(
         "-s",
         "--status",
         type=str,
         choices=["todo", "in-progress", "done"],
         help="Update task status",
     )
-    parser_update.add_argument(
+    parser.add_argument(
         "--due",
         type=str,
         help="Update due date/time (YYYY-MM-DD HH:MM)",
     )
-    parser_update.set_defaults(func=lambda args: run(args, service))
+    parser.set_defaults(func=run)
 
 
-def run(args, service: CLIClient):
-    tid = service.update(
-        args.id,
-        args.description,
-        args.priority,
-        args.status,
-        args.due,
-    )
-    if not tid:
-        return "Task not updated"
-    return f"Task updated (ID:{tid})"
+def run(args):
+    task_id = args.id
+    update_data = {}
+
+    if args.description:
+        update_data["description"] = args.description
+
+    if args.status:
+        update_data["status"] = args.status
+
+    if args.due:
+        update_data["due_at"] = args.due
+
+    # No fields provided
+    if not update_data:
+        return "⚠️ Nothing to update"
+
+    try:
+        request(
+            "PUT",
+            f"/tasks/{task_id}",
+            json=update_data,
+        )
+    except SystemExit:
+        return "❌ Failed to update task"
+
+    return f"✏️ Task updated (ID: {task_id[:8]})"
