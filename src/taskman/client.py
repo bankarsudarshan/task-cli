@@ -48,3 +48,18 @@ def request(method: str, path: str, **kwargs):
         raise SystemExit(1)
 
     return response
+
+
+def get_full_id(short_id: str) -> str:
+    response = request("GET", "/tasks/")
+    tasks = response.json().get("tasks", [])
+    matches = [t for t in tasks if t["id"].startswith(short_id)]
+
+    if not matches:
+        return "❌ No task found"
+
+    if len(matches) > 1:
+        return "❌ Multiple matches, use full ID"
+
+    task_id = matches[0]["id"]
+    return task_id

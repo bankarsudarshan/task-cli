@@ -1,4 +1,4 @@
-from taskman.client import request
+from taskman.client import get_full_id, request
 
 
 def register(subparser):
@@ -18,8 +18,8 @@ def register(subparser):
 
 
 def run(args):
-    task_id = args.id
-
+    task_id = get_full_id(args.id)  # short-id support
+    print(task_id)
     try:
         request(
             "DELETE",

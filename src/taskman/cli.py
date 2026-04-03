@@ -4,7 +4,7 @@ from taskman.commands import (
     add_cmd,
     delete_cmd,
     list_cmd,
-    # mark_cmd,
+    mark_cmd,
     update_cmd,
 )
 
@@ -20,7 +20,7 @@ def main():
     list_cmd.register(subparser)
     update_cmd.register(subparser)
     delete_cmd.register(subparser)
-    # mark_cmd.register(subparser)
+    mark_cmd.register(subparser)
 
     args = parser.parse_args()
 
