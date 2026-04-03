@@ -1,30 +1,31 @@
-from taskman.client import CLIClient
+from taskman.client import request
 
 
-def register(subparser, service: CLIClient):
-    parser_delete = subparser.add_parser(
+def register(subparser):
+    parser = subparser.add_parser(
         "delete",
         help="Delete a task",
         description="Remove a task permanently using its ID.",
     )
-    parser_delete.add_argument(
+
+    parser.add_argument(
         "id",
-        type=int,
+        type=str,
         help="ID of the task to delete",
     )
-    # parser_delete.add_argument(
-    #     "--tasks-type",
-    #     choices=["in-progress", "todo"],
-    #     help="Delete tasks by status",
-    # )
-    parser_delete.set_defaults(func=lambda args: run_delete(args, service))
+
+    parser.set_defaults(func=run)
 
 
-def run_delete(args, service: CLIClient):
-    tid = service.delete(
-        tid=args.id,
-        # tasks_type=args.tasks_type,
-    )
-    if tid is None:
-        return "Could not delete the task"
-    return f"Task deleted (ID:{tid})"
+def run(args):
+    task_id = args.id
+
+    try:
+        request(
+            "DELETE",
+            f"/tasks/{task_id}",
+        )
+    except SystemExit:
+        return "❌ Failed to delete task"
+
+    return f"🗑️ Task deleted (ID: {task_id[:8]})"
