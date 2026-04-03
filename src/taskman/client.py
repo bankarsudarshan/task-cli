@@ -5,7 +5,7 @@ import requests
 from taskman.auth import login_flow
 from taskman.config import get_token, save_token
 
-BASE_URL = "http://localhost:8000/api/v1"
+BASE_URL = "http://localhost:48001/api/v1"
 
 
 def request(method: str, path: str, **kwargs):
